@@ -3,217 +3,86 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ARデジタルいけす</title>
-    <!-- 
-      A-FrameやWebXRはVRモードを誤作動させる原因になるため、使用を一切禁止しました。
-      今回は、VR機能を完全に持たないピュアな「AR.js」のみをスタンドアロンで読み込みます。
-    -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar.js"></script>
-    <!-- GLTF（タイの3Dモデル）を読み込むための軽量ライブラリ -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    
-    <style>
-      body {
-        margin: 0px;
-        overflow: hidden;
-        font-family: sans-serif;
-      }
-      /* スタート画面 */
-      #welcome-screen {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(circle, #002b49 0%, #00101e 100%);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        color: white;
-        text-align: center;
-      }
-      #start-btn {
-        padding: 18px 40px;
-        font-size: 18px;
-        background: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
-        color: white;
-        border: none;
-        border-radius: 30px;
-        cursor: pointer;
-        font-weight: bold;
-        box-shadow: 0 4px 15px rgba(0,210,255,0.4);
-        margin-top: 30px;
-      }
-      #instructions {
-        position: absolute;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 16, 30, 0.85);
-        border: 1px solid rgba(0, 210, 255, 0.3);
-        color: #e0f7fc;
-        padding: 12px 24px;
-        border-radius: 25px;
-        font-size: 14px;
-        z-index: 998;
-        text-align: center;
-        pointer-events: none;
-        display: none;
-      }
-      /* AR.jsのビデオ画面が変に歪まないように固定 */
-      video {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: -1;
-      }
-    </style>
+    <title>AR Aquarium</title>
+    <!-- 通常の1画面カメラARを起動するための安定ライブラリ -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   </head>
-  <body>
+  <body style="margin: 0px; overflow: hidden;">
 
-    <!-- スタート画面 -->
-    <div id="welcome-screen">
-      <h1 style="margin: 0 20px; font-size: 26px; letter-spacing: 2px;">ARデジタルいけす</h1>
-      <p style="font-size: 14px; color: #8ec5fc; margin: 15px 30px; line-height: 1.6;">
-        カメラをかざして、泳ぎ回るタイを探してみよう！
-      </p>
-      <button id="start-btn">デジタルいけすに入る</button>
-    </div>
+    <!-- VRモードやデバッグ表示を完全にオフにし、1画面のスマホカメラを背景にします -->
+    <a-scene 
+      embedded 
+      arjs="sourceType: webcam; debugUIEnabled: false;"
+      vr-mode-ui="enabled: false">
+      
+      <a-assets>
+        <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
+      </a-assets>
 
-    <!-- 案内表示 -->
-    <div id="instructions">光るパスの上を泳ぐタイをスマホで追いかけよう！</div>
+      <!-- 
+        【タイのみを配置】
+        カメラから2.5メートル奥、0.8メートル下の位置を基準にします。
+        光るパス（リング）などの余計なビジュアルオブジェクトはすべて排除しました。
+      -->
+      <a-entity id="aquarium-space" position="0 -0.8 -2.5">
+        
+        <!-- タイの3Dモデル（ちょうどいいサイズ） -->
+        <a-entity 
+          id="my-fish" 
+          gltf-model="#fish-model" 
+          scale="0.12 0.12 0.12" 
+          position="0 0 0">
+        </a-entity>
+
+      </a-entity>
+
+      <a-entity camera></a-entity>
+    </a-scene>
 
     <script>
-      const startBtn = document.getElementById('start-btn');
-      const welcomeScreen = document.getElementById('welcome-screen');
-      const instructions = document.getElementById('instructions');
+      const fish = document.querySelector('#my-fish');
+      
+      // 🐟 自律遊泳パラメーター
+      let posX = 0;       // 現在のX位置
+      let posZ = 0;       // 現在のZ位置
+      let speed = 0.008;  // 泳ぐスピード
+      let direction = Math.random() * Math.PI * 2; // 進む方角
+      let turnSpeed = 0;  // 旋回スピード
+      const limitRadius = 1.3; // 泳ぎ回る範囲の限界半径
 
-      let scene, camera, renderer, arToolkitSource, arToolkitContext;
-      let fishModel = null;
-      let rings = [];
-      let angle = 0;
-      const pathRadius = 1.2; // 泳ぐサークルの半径
-
-      startBtn.addEventListener('click', () => {
-        welcomeScreen.style.display = 'none';
-        instructions.style.display = 'block';
-        initAR();
-      });
-
-      function initAR() {
-        // 1. シーンとカメラのセットアップ（VRゴーグル用のステレオ表示を根本から排除）
-        scene = new THREE.Scene();
-        camera = new THREE.Camera();
-        scene.add(camera);
-
-        // ライトの追加（モデルを明るく見せるため）
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-        scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        directionalLight.position.set(0, 1, 0);
-        scene.add(directionalLight);
-
-        // 2. レンダーの作成（絶対に2分割させない、通常の1画面描画）
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.domElement.style.position = 'absolute';
-        renderer.domElement.style.top = '0px';
-        renderer.domElement.style.left = '0px';
-        document.body.appendChild(renderer.domElement);
-
-        // 3. AR.jsのカメラ起動（VRを完全に排した純粋なカメラ背景）
-        arToolkitSource = new THREEx.ArToolkitSource({
-          sourceType: 'webcam'
-        });
-
-        arToolkitSource.init(function onReady() {
-          setTimeout(() => {
-            onResize();
-          }, 1000);
-        });
-
-        window.addEventListener('resize', onResize);
-
-        arToolkitContext = new THREEx.ArToolkitContext({
-          cameraParametersUrl: 'https://raw.githack.com/AR-js-org/AR.js/master/data/data/camera_para.dat',
-          detectionMode: 'mono'
-        });
-
-        arToolkitContext.init(function onCompleted() {
-          camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
-        });
-
-        // 4. 光るパス（2重のリング）を床（カメラの少し前方下）に設置
-        const ringGeo1 = new THREE.RingGeometry(1.19, 1.2, 64);
-        const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, opacity: 0.8, transparent: true });
-        const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
-        ring1.rotation.x = -Math.PI / 2;
-        ring1.position.set(0, -0.8, -2.5); // カメラから2.5m奥、0.8m下
-        scene.add(ring1);
-
-        const ringGeo2 = new THREE.RingGeometry(1.16, 1.17, 64);
-        const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x0077ff, side: THREE.DoubleSide, opacity: 0.3, transparent: true });
-        const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
-        ring2.rotation.x = -Math.PI / 2;
-        ring2.position.set(0, -0.8, -2.5);
-        scene.add(ring2);
-
-        // 5. タイの3Dモデル（tai.glb）をロードして配置
-        const loader = new THREE.GLTFLoader();
-        loader.load('tai.glb', function (gltf) {
-          fishModel = gltf.scene;
-          // サイズ調整（等倍だと大きいので0.12倍に縮小）
-          fishModel.scale.set(0.12, 0.12, 0.12);
-          fishModel.position.set(0, -0.8, -2.5);
-          scene.add(fishModel);
-          
-          animate();
-        }, undefined, function (error) {
-          console.error('モデルの読み込みに失敗しました:', error);
-        });
-      }
-
-      function onResize() {
-        arToolkitSource.onResizeElement();
-        arToolkitSource.copyElementSizeTo(renderer.domElement);
-        if (arToolkitContext.arController !== null) {
-          arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas);
-        }
-      }
-
-      // 6. 1画面用のシンプルな描画・アニメーションループ
       function animate() {
         requestAnimationFrame(animate);
 
-        if (arToolkitSource.ready !== false) {
-          arToolkitContext.update(arToolkitSource.domElement);
+        if (fish && fish.object3D) {
+          // 1. 進む方向をランダムに少しずつ揺らして、魚らしい不規則な動きを作る
+          turnSpeed += (Math.random() - 0.5) * 0.05;
+          turnSpeed = Math.max(-0.04, Math.min(0.04, turnSpeed)); // 急旋回しすぎないよう制限
+          direction += turnSpeed;
+
+          // 2. 現在の方角に向かって進む
+          posX += Math.cos(direction) * speed;
+          posZ += Math.sin(direction) * speed;
+
+          // 3. 一定の範囲（いけすの境界）を出そうになったら、自動で中央に向きを戻す
+          const distanceFromCenter = Math.sqrt(posX * posX + posZ * posZ);
+          if (distanceFromCenter > limitRadius) {
+            const angleToCenter = Math.atan2(-posZ, -posX);
+            direction = angleToCenter + (Math.random() - 0.5) * 0.5;
+            turnSpeed = 0;
+          }
+
+          // 4. 3Dモデルの位置を更新
+          fish.object3D.position.x = posX;
+          fish.object3D.position.z = posZ;
+
+          // 5. 進行方向に頭を向けつつ、尾ひれをくねくね動かすブレ（wiggle）をリアルタイムに計算して合成
+          const wiggle = Math.sin(posX * 15 + posZ * 15) * 0.08;
+          fish.object3D.rotation.y = -direction + Math.PI / 2 + wiggle;
         }
-
-        if (fishModel) {
-          angle += 0.012; // 泳ぐスピード
-
-          // 光るパス（カメラから2.5m奥、0.8m下を基準）に沿ってタイを動かす
-          const centerX = 0;
-          const centerZ = -2.5;
-          const localX = Math.cos(angle) * pathRadius;
-          const localZ = Math.sin(angle) * pathRadius;
-
-          fishModel.position.x = centerX + localX;
-          fishModel.position.z = centerZ + localZ;
-
-          // 尾ひれをくねくねさせる振幅の計算
-          const wiggle = Math.sin(angle * 12) * 0.09;
-
-          // 進行方向に頭を向け、くねくねを加算
-          fishModel.rotation.y = -angle + Math.PI / 2 + wiggle;
-        }
-
-        renderer.render(scene, camera);
       }
+
+      animate();
     </script>
   </body>
 </html>
