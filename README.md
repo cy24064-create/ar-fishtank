@@ -1,2 +1,2 @@
-# ar-aquarium
+# ar-ikesu
 ARでいけすを作成
