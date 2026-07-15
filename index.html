@@ -2,52 +2,150 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>AR Aquarium & Brand Story</title>
-    <!-- 3D・ARライブラリを読み込みます -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <title>AR平面いけす＆ストーリー</title>
+    <!-- A-Frameと、WebXR（平面検知）を有効にする最新のライブラリ -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+      #ar-instructions {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-family: sans-serif;
+        font-size: 14px;
+        z-index: 10;
+        pointer-events: none;
+        text-align: center;
+      }
+    </style>
   </head>
   <body style="margin: 0px; overflow: hidden;">
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <!-- 案内表示 -->
+    <div id="ar-instructions">スマホをゆっくり左右に動かして、テーブルを検知してください</div>
+
+    <!-- WebXRの平面検知（hit-test）を有効にしたARシーン -->
+    <a-scene 
+      webxr="optionalFeatures: hit-test, local-floor;" 
+      xr-mode-ui="enabled: true" 
+      gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/;">
       
-      <!-- Hiroマーカー（カメラをかざす目印） -->
-      <a-marker preset="hiro">
+      <a-assets>
+        <!-- 
+          【3Dモデルの読み込み】
+          アップロードしたあなたのタイのファイル名を、下の「src」に指定します。
+        -->
+        <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
+      </a-assets>
+
+      <!-- 平面検知用のレティクル（狙いリング） -->
+      <a-entity id="reticle" ar-hit-test="target: #aquarium-group">
+        <a-ring color="#00ffff" rotation="-90 0 0" radius-inner="0.15" radius-outer="0.2" visible="false"></a-ring>
+      </a-entity>
+
+      <!-- 【ARいけすグループ】 -->
+      <a-entity id="aquarium-group" position="0 0 0" visible="false">
         
-        <!-- テスト用の赤い球体（後でお手持ちのタイの.glbモデルに差し替えます） -->
+        <!-- あなたのタイの3Dモデル -->
         <a-entity 
           id="my-fish" 
-          geometry="primitive: sphere; radius: 0.3" 
-          material="color: #ff3366" 
-          position="0 0.5 0">
+          gltf-model="#fish-model" 
+          scale="1 1 1" 
+          position="0 0.1 0">
         </a-entity>
 
-      </a-marker>
-      
-      <a-entity camera></a-entity>
+        <!-- いけすの範囲を示す青いリング -->
+        <a-ring color="#00a2ff" rotation="-90 0 0" radius-inner="0.8" radius-outer="0.82" opacity="0.5"></a-ring>
+
+      </a-entity>
+
+      <a-entity camera position="0 1.6 0"></a-entity>
     </a-scene>
 
     <script>
-      // 🔄 無限ループ：自動でスイスイ円状に泳ぎ回るプログラム
+      const sceneEl = document.querySelector('a-scene');
+      const reticle = document.querySelector('#reticle');
+      const aquariumGroup = document.querySelector('#aquarium-group');
+      const instructions = document.querySelector('#ar-instructions');
       const fish = document.querySelector('#my-fish');
+      
       let angle = 0;
+      let isPlaced = false;
 
-      function animate() {
-        requestAnimationFrame(animate);
+      // 1. 平面検知（WebXR Hit Test）の処理
+      sceneEl.addEventListener('enter-vr', () => {
+        if (sceneEl.is('ar-mode')) {
+          const session = sceneEl.xrSession;
+          session.requestReferenceSpace('viewer').then((refSpace) => {
+            session.requestHitTestSource({ space: refSpace }).then((source) => {
+              sceneEl.hitTestSource = source;
+            });
+          });
+          session.requestReferenceSpace('local-floor').then((refSpace) => {
+            sceneEl.localFloorSpace = refSpace;
+          });
+        }
+      });
 
-        if (fish && fish.object3D) {
-          angle += 0.02; // 泳ぐスピード
+      sceneEl.addEventListener('renderstart', () => {
+        const renderer = sceneEl.renderer;
+        renderer.xr.addEventListener('sessionstart', () => {
+          renderer.xr.getSession().addEventListener('select', onSelect);
+        });
+      });
 
-          // 縦横無尽に泳がせるための円軌道（Sin/Cos）
-          fish.object3D.position.x = Math.cos(angle) * 1.5;
-          fish.object3D.position.z = Math.sin(angle) * 1.5;
+      // 毎フレームの描画（無限に泳がせる）
+      function tick() {
+        requestAnimationFrame(tick);
 
-          // 進行方向に魚の頭を向ける自動回転
-          fish.object3D.rotation.y = -angle;
+        if (fish && fish.object3D && isPlaced) {
+          angle += 0.015; // 泳ぐ速度。速くしたい場合は数値を大きくします
+
+          // 机の上を綺麗な円を描いて泳がせる
+          fish.object3D.position.x = Math.cos(angle) * 0.6;
+          fish.object3D.position.z = Math.sin(angle) * 0.6;
+
+          // 魚の頭を常に進行方向に向ける回転処理
+          fish.object3D.rotation.y = -angle + Math.PI / 2;
+        }
+
+        // レティクルの表示制御
+        if (sceneEl.is('ar-mode') && !isPlaced) {
+          const frame = sceneEl.frame;
+          if (sceneEl.hitTestSource && frame) {
+            const hitTestResults = frame.getHitTestResults(sceneEl.hitTestSource);
+            if (hitTestResults.length > 0) {
+              const hit = hitTestResults[0];
+              const pose = hit.getPose(sceneEl.localFloorSpace);
+              
+              reticle.setAttribute('visible', 'true');
+              reticle.object3D.position.copy(pose.transform.position);
+              reticle.object3D.quaternion.copy(pose.transform.orientation);
+              
+              instructions.innerText = "画面をタップして、いけすを設置！";
+            } else {
+              reticle.setAttribute('visible', 'false');
+            }
+          }
         }
       }
+      tick();
 
-      animate();
+      // 画面タップで設置
+      function onSelect() {
+        if (!isPlaced && reticle.getAttribute('visible') === 'true') {
+          aquariumGroup.object3D.position.copy(reticle.object3D.position);
+          aquariumGroup.setAttribute('visible', 'true');
+          
+          isPlaced = true;
+          reticle.setAttribute('visible', 'false');
+          instructions.style.display = 'none';
+        }
+      }
     </script>
   </body>
 </html>
