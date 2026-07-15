@@ -36,25 +36,22 @@
         <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
       </a-assets>
 
-      <!-- 
-        【いけすグループの位置調整】
-        position="0 -0.5 -2.5" ➔ カメラから2.5メートル奥、少し下（机の上あたり）に配置します
-      -->
+      <!-- いけす全体の配置位置：カメラから2.5m奥、少し下に設定 -->
       <a-entity id="aquarium-group" position="0 -0.5 -2.5">
         
         <!-- 
-          【タイの大きさを縮小】
-          scale="0.01 0.01 0.01" ➔ 元のモデルが巨大すぎるため、1/100のサイズに縮小してテーブルサイズにします
+          【タイのサイズ変更】
+          scaleを「0.1」に設定し、テーブルの上にちょうどいい、存在感のある鯛の大きさにします。
         -->
         <a-entity 
           id="my-fish" 
           gltf-model="#fish-model" 
-          scale="0.01 0.01 0.01" 
+          scale="0.1 0.1 0.1" 
           position="0 0 0">
         </a-entity>
 
-        <!-- いけすの青いリング（こちらも魚のサイズに合わせて少しコンパクトに調整） -->
-        <a-ring color="#00a2ff" rotation="-90 0 0" radius-inner="0.6" radius-outer="0.62" opacity="0.5"></a-ring>
+        <!-- いけすの範囲を示す青い光のリング（半径1.5メートルに拡大） -->
+        <a-ring color="#00a2ff" rotation="-90 0 0" radius-inner="1.5" radius-outer="1.52" opacity="0.4"></a-ring>
 
       </a-entity>
 
@@ -63,20 +60,46 @@
 
     <script>
       const fish = document.querySelector('#my-fish');
-      let angle = 0;
+      
+      // 🐟 自律遊泳パラメータ
+      let posX = 0;       // 現在のX位置
+      let posZ = 0;       // 現在のZ位置
+      let speed = 0.008;  // 泳ぐスピード
+      let direction = Math.random() * Math.PI * 2; // 進む方角（ラジアン）
+      let turnSpeed = 0;  // 旋回スピード
+      const limitRadius = 1.4; // 泳ぎ回るいけすの境界半径（リングの内側で留まるようにする）
 
       function animate() {
         requestAnimationFrame(animate);
 
         if (fish && fish.object3D) {
-          angle += 0.02; // 泳ぐスピードを少しだけアップ
+          
+          // 1. 少しずつ進む方向をランダムに揺らす（本物の魚らしいフラフラ感を出す）
+          turnSpeed += (Math.random() - 0.5) * 0.05;
+          turnSpeed = Math.max(-0.05, Math.min(0.05, turnSpeed)); // 急旋回しすぎないように制限
+          direction += turnSpeed;
 
-          // 半径0.5メートルの円を描いて、いけすのリングに沿って泳がせます
-          fish.object3D.position.x = Math.cos(angle) * 0.5;
-          fish.object3D.position.z = Math.sin(angle) * 0.5;
+          // 2. 現在の向きに向かって進む
+          posX += Math.cos(direction) * speed;
+          posZ += Math.sin(direction) * speed;
 
-          // 魚が円の進行方向（常に前）を向いて泳ぐようにします
-          fish.object3D.rotation.y = -angle + Math.PI / 2;
+          // 3. いけすの境界（リングの端）に近づいたら、自動的に中央に戻るように方向転換する
+          const distanceFromCenter = Math.sqrt(posX * posX + posZ * posZ);
+          if (distanceFromCenter > limitRadius) {
+            // 中心を向く角度を計算
+            const angleToCenter = Math.atan2(-posZ, -posX);
+            // なめらかに中央に向きを変える
+            direction = angleToCenter + (Math.random() - 0.5) * 0.5;
+            turnSpeed = 0; // 旋回をリセット
+          }
+
+          // 4. 魚の位置を更新
+          fish.object3D.position.x = posX;
+          fish.object3D.position.z = posZ;
+
+          // 5. 進行方向に魚の頭を向ける（※タイの3Dモデルの向きに合わせて「-direction」で調整しています）
+          // もし頭の向きが逆を向く場合は、「+ Math.PI」などを追加して調整します
+          fish.object3D.rotation.y = -direction + Math.PI / 2;
         }
       }
 
