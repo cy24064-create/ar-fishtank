@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>AR Aquarium & Brand Story</title>
+    <!-- 3D・ARライブラリを読み込みます -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  </head>
+  <body style="margin: 0px; overflow: hidden;">
+
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+      
+      <!-- Hiroマーカー（カメラをかざす目印） -->
+      <a-marker preset="hiro">
+        
+        <!-- テスト用の赤い球体（後でお手持ちのタイの.glbモデルに差し替えます） -->
+        <a-entity 
+          id="my-fish" 
+          geometry="primitive: sphere; radius: 0.3" 
+          material="color: #ff3366" 
+          position="0 0.5 0">
+        </a-entity>
+
+      </a-marker>
+      
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      // 🔄 無限ループ：自動でスイスイ円状に泳ぎ回るプログラム
+      const fish = document.querySelector('#my-fish');
+      let angle = 0;
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        if (fish && fish.object3D) {
+          angle += 0.02; // 泳ぐスピード
+
+          // 縦横無尽に泳がせるための円軌道（Sin/Cos）
+          fish.object3D.position.x = Math.cos(angle) * 1.5;
+          fish.object3D.position.z = Math.sin(angle) * 1.5;
+
+          // 進行方向に魚の頭を向ける自動回転
+          fish.object3D.rotation.y = -angle;
+        }
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
