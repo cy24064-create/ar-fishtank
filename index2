@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>360度 デジタル水族館 (テスト用)</title>
+    <title>四十八漁業</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     <style>
@@ -125,8 +125,9 @@
 
     <video id="webcam-bg" autoplay playsinline muted></video>
 
+    <!-- 🌟ここが変更点です🌟 -->
     <div id="start-screen">
-      <h2 style="margin-bottom: 10px;">デジタル水族館</h2>
+      <h2 style="margin-bottom: 10px;">四十八漁業</h2>
       <p style="font-size: 14px; color: #aaa; margin-bottom: 30px;">
         ※泳いでいる魚をタップしてみてね！
       </p>
@@ -160,7 +161,6 @@
         潮流の激しい海域で育ったため、身が引き締まり脂の乗りが抜群。船上で素早く「活〆処理」を行っているため、鮮度と旨味が最大限に引き出されています！
       </div>
 
-      <!-- アクションボタンコンテナ -->
       <div class="action-button-container">
         <button class="action-btn" id="dishes-btn">この魚の料理</button>
         <button class="action-btn" id="see-actual-btn">実際に見る</button>
@@ -175,7 +175,7 @@
         embedded 
         renderer="alpha: true; colorManagement: true; precision: high; antialias: true;"
         vr-mode-ui="enabled: false"
-        cursor="rayOrigin: mouse"
+        cursor="rayOrigin: mouse; fuse: false;"
         raycaster="objects: .clickable">
         
         <a-assets>
@@ -193,11 +193,13 @@
           scale="0.12 0.12 0.12" 
           position="0 0 -2"
           animation-mixer>
+          <!-- タップしやすいように見えない大きな当たり判定（球体）を追加 -->
+          <a-entity geometry="primitive: sphere; radius: 10" material="transparent: true; opacity: 0;" class="clickable"></a-entity>
         </a-entity>
         
         <!-- 料理のAR表示用エンティティ -->
         <a-entity id="dishes-space" visible="false">
-          <!-- 料理のモデル (仮で寿司皿、カメラから近い位置に配置) -->
+          <!-- 料理のモデル -->
           <a-entity 
             id="sushi-dish"
             class="clickable dishes"
@@ -205,6 +207,8 @@
             scale="0.2 0.2 0.2" 
             position="0 0.2 -1.5"
             rotation="0 0 0">
+            <!-- 料理にもタップしやすい当たり判定を追加 -->
+            <a-entity geometry="primitive: sphere; radius: 5" material="transparent: true; opacity: 0;" class="clickable"></a-entity>
           </a-entity>
         </a-entity>
 
@@ -229,7 +233,9 @@
       const sushiDish = document.getElementById('sushi-dish');
 
       // 魚がタップされたらポップアップを表示する
-      fish.addEventListener('click', () => {
+      fish.addEventListener('click', (e) => {
+        // イベントの伝播を止めて複数回発火するのを防ぐ
+        e.stopPropagation();
         infoCard.style.display = 'block';
       });
 
@@ -248,18 +254,18 @@
       });
 
       // 料理モデルをタップして戻る動作
-      sushiDish.addEventListener('click', () => {
+      sushiDish.addEventListener('click', (e) => {
+        e.stopPropagation();
         dishesSpace.setAttribute('visible', 'false');
         fish.setAttribute('visible', 'true');
         instructions.style.display = 'none';
       });
 
-      // 「実際に見る」ボタンの動作（おかもちのメッセージ）
+      // 「実際に見る」ボタンの動作
       seeActualBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
         instructions.innerText = "ただいま、おかもちをお持ちいたします。";
         instructions.style.display = 'block';
-        // 4秒後に案内を消す
         setTimeout(() => {
           instructions.style.display = 'none';
         }, 4000);
@@ -285,7 +291,6 @@
         }
       });
       
-      // 料理モデルの画質設定（透け対策など）
       sushiDish.addEventListener('model-loaded', () => {
         const mesh = sushiDish.getObject3D('mesh');
         if (mesh) {
@@ -313,7 +318,6 @@
       function animate() {
         requestAnimationFrame(animate);
         
-        // 料理が表示されている時は魚を動かさない、魚が表示されている時のみ動かす
         if (fish && fish.object3D && fish.getAttribute('visible') === 'true') {
           const obj = fish.object3D;
 
