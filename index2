@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>360度 デジタル水族館 (テスト用)</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <style>
+      body, html { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Helvetica Neue', Arial, sans-serif; }
+      
+      #webcam-bg {
+        position: absolute;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        object-fit: cover;
+        z-index: 1;
+      }
+
+      #ar-scene-container {
+        position: absolute;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 2;
+      }
+
+      #start-screen {
+        position: absolute;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0, 20, 40, 0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        color: white;
+      }
+      #start-btn {
+        padding: 15px 40px;
+        font-size: 18px;
+        background: #00a2ff;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,162,255,0.5);
+        cursor: pointer;
+      }
+
+      /* 魚の情報ポップアップカードのスタイル */
+      #fish-info-card {
+        display: none;
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 85%; max-width: 320px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        z-index: 10000;
+        color: #333;
+        animation: fadeIn 0.3s ease-out;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, -45%); }
+        to { opacity: 1; transform: translate(-50%, -50%); }
+      }
+
+      .info-header { font-size: 22px; font-weight: bold; color: #002b49; border-bottom: 2px solid #00a2ff; padding-bottom: 10px; margin-bottom: 15px; }
+      .info-row { margin-bottom: 12px; font-size: 14px; line-height: 1.5; }
+      .info-label { font-weight: bold; color: #0066ff; display: block; font-size: 12px; margin-bottom: 4px; }
+      
+      /* アクションボタンコンテナ */
+      .action-button-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      
+      .action-btn {
+        flex: 1;
+        padding: 12px;
+        background: #00a2ff;
+        color: white;
+        text-align: center;
+        border-radius: 25px;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        box-shadow: 0 4px 10px rgba(0,162,255,0.3);
+      }
+      .action-btn:hover { background: #0088dd; }
+
+      .close-btn {
+        display: block; width: 100%; padding: 12px;
+        margin-top: 15px; background: #002b49; color: white;
+        text-align: center; border-radius: 25px; font-weight: bold;
+        border: none; cursor: pointer;
+      }
+      
+      /* 案内表示 */
+      #instructions {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 16, 30, 0.85);
+        border: 1px solid rgba(0, 210, 255, 0.3);
+        color: #e0f7fc;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 14px;
+        z-index: 998;
+        text-align: center;
+        pointer-events: none;
+        display: none;
+        width: 80%;
+      }
+    </style>
+  </head>
+  <body>
+
+    <video id="webcam-bg" autoplay playsinline muted></video>
+
+    <div id="start-screen">
+      <h2 style="margin-bottom: 10px;">デジタル水族館</h2>
+      <p style="font-size: 14px; color: #aaa; margin-bottom: 30px;">
+        ※泳いでいる魚をタップしてみてね！
+      </p>
+      <button id="start-btn">スタート</button>
+    </div>
+
+    <!-- 案内表示 -->
+    <div id="instructions"></div>
+
+    <!-- 魚の詳細情報カード -->
+    <div id="fish-info-card">
+      <div class="info-header">🐟 豊浜産 活〆真鯛</div>
+      
+      <div class="info-row">
+        <span class="info-label">📍 漁獲した場所</span>
+        愛知県 南知多 豊浜漁港
+      </div>
+      
+      <div class="info-row">
+        <span class="info-label">⏱️ 水揚げ時間</span>
+        約8時間前（今朝獲れ！）
+      </div>
+      
+      <div class="info-row">
+        <span class="info-label">👨‍🌾 生産者・漁船</span>
+        第十八 豊漁丸（漁師・鈴木さん）
+      </div>
+      
+      <div class="info-row">
+        <span class="info-label">✨ おいしさの秘密</span>
+        潮流の激しい海域で育ったため、身が引き締まり脂の乗りが抜群。船上で素早く「活〆処理」を行っているため、鮮度と旨味が最大限に引き出されています！
+      </div>
+
+      <!-- アクションボタンコンテナ -->
+      <div class="action-button-container">
+        <button class="action-btn" id="dishes-btn">この魚の料理</button>
+        <button class="action-btn" id="see-actual-btn">実際に見る</button>
+      </div>
+
+      <button class="close-btn" id="close-info-btn">閉じる</button>
+    </div>
+
+    <div id="ar-scene-container">
+      <a-scene 
+        id="sceneEl"
+        embedded 
+        renderer="alpha: true; colorManagement: true; precision: high; antialias: true;"
+        vr-mode-ui="enabled: false"
+        cursor="rayOrigin: mouse"
+        raycaster="objects: .clickable">
+        
+        <a-assets>
+          <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
+          <a-asset-item id="sushi-dish-model" src="sushi_dish.glb"></a-asset-item>
+        </a-assets>
+
+        <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
+
+        <!-- タイ -->
+        <a-entity 
+          id="my-fish" 
+          class="clickable"
+          gltf-model="#fish-model" 
+          scale="0.12 0.12 0.12" 
+          position="0 0 -2"
+          animation-mixer>
+        </a-entity>
+        
+        <!-- 料理のAR表示用エンティティ -->
+        <a-entity id="dishes-space" visible="false">
+          <!-- 料理のモデル (仮で寿司皿、カメラから近い位置に配置) -->
+          <a-entity 
+            id="sushi-dish"
+            class="clickable dishes"
+            gltf-model="#sushi-dish-model" 
+            scale="0.2 0.2 0.2" 
+            position="0 0.2 -1.5"
+            rotation="0 0 0">
+          </a-entity>
+        </a-entity>
+
+        <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
+        <a-entity light="type: directional; intensity: 0.8;" position="1 2 1"></a-entity>
+      </a-scene>
+    </div>
+
+    <script>
+      const sceneEl = document.getElementById('sceneEl');
+      const startBtn = document.getElementById('start-btn');
+      const startScreen = document.getElementById('start-screen');
+      const webcam = document.getElementById('webcam-bg');
+      const fish = document.querySelector('#my-fish');
+      const infoCard = document.getElementById('fish-info-card');
+      const closeInfoBtn = document.getElementById('close-info-btn');
+      const instructions = document.getElementById('instructions');
+      
+      const dishesBtn = document.getElementById('dishes-btn');
+      const seeActualBtn = document.getElementById('see-actual-btn');
+      const dishesSpace = document.getElementById('dishes-space');
+      const sushiDish = document.getElementById('sushi-dish');
+
+      // 魚がタップされたらポップアップを表示する
+      fish.addEventListener('click', () => {
+        infoCard.style.display = 'block';
+      });
+
+      // 閉じるボタンが押されたらポップアップを隠す
+      closeInfoBtn.addEventListener('click', () => {
+        infoCard.style.display = 'none';
+      });
+      
+      // 「この魚の料理」ボタンの動作
+      dishesBtn.addEventListener('click', () => {
+        infoCard.style.display = 'none';
+        fish.setAttribute('visible', 'false');
+        dishesSpace.setAttribute('visible', 'true');
+        instructions.innerText = "この魚を使った料理が登場！タップして戻る";
+        instructions.style.display = 'block';
+      });
+
+      // 料理モデルをタップして戻る動作
+      sushiDish.addEventListener('click', () => {
+        dishesSpace.setAttribute('visible', 'false');
+        fish.setAttribute('visible', 'true');
+        instructions.style.display = 'none';
+      });
+
+      // 「実際に見る」ボタンの動作（おかもちのメッセージ）
+      seeActualBtn.addEventListener('click', () => {
+        infoCard.style.display = 'none';
+        instructions.innerText = "ただいま、おかもちをお持ちいたします。";
+        instructions.style.display = 'block';
+        // 4秒後に案内を消す
+        setTimeout(() => {
+          instructions.style.display = 'none';
+        }, 4000);
+      });
+
+      // 画質の向上と透過バグ修正
+      fish.addEventListener('model-loaded', () => {
+        const mesh = fish.getObject3D('mesh');
+        if (mesh) {
+          mesh.traverse((node) => {
+            if (node.isMesh) {
+              node.material.side = THREE.DoubleSide;
+              node.material.transparent = false;
+              node.material.depthWrite = true;
+              if (node.material.map) {
+                node.material.map.minFilter = THREE.LinearMipmapLinearFilter;
+                node.material.map.magFilter = THREE.LinearFilter;
+                node.material.map.needsUpdate = true;
+              }
+              node.material.needsUpdate = true;
+            }
+          });
+        }
+      });
+      
+      // 料理モデルの画質設定（透け対策など）
+      sushiDish.addEventListener('model-loaded', () => {
+        const mesh = sushiDish.getObject3D('mesh');
+        if (mesh) {
+          mesh.traverse((node) => {
+            if (node.isMesh) {
+              node.material.side = THREE.DoubleSide;
+              node.material.transparent = false;
+              node.material.depthWrite = true;
+              if (node.material.map) {
+                node.material.map.minFilter = THREE.LinearMipmapLinearFilter;
+                node.material.map.magFilter = THREE.LinearFilter;
+                node.material.map.needsUpdate = true;
+              }
+              node.material.needsUpdate = true;
+            }
+          });
+        }
+      });
+
+      // 自律遊泳アルゴリズム
+      const velocity = new THREE.Vector3(0, 0, -0.01); 
+      const acceleration = new THREE.Vector3();
+      const dummy = new THREE.Object3D(); 
+
+      function animate() {
+        requestAnimationFrame(animate);
+        
+        // 料理が表示されている時は魚を動かさない、魚が表示されている時のみ動かす
+        if (fish && fish.object3D && fish.getAttribute('visible') === 'true') {
+          const obj = fish.object3D;
+
+          const wanderX = (Math.random() - 0.5) * 0.0006;
+          const wanderY = (Math.random() - 0.5) * 0.0003; 
+          const wanderZ = (Math.random() - 0.5) * 0.0006;
+          acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
+
+          const dist = obj.position.length();
+          if (dist > 3.0) {
+            acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
+          } else if (dist < 1.0) {
+            acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
+          }
+
+          if (obj.position.y > 0.8) {
+            acceleration.y -= 0.0003;
+          } else if (obj.position.y < -0.8) {
+            acceleration.y += 0.0003;
+          }
+
+          velocity.add(acceleration);
+          velocity.clampLength(0.005, 0.012); 
+          obj.position.add(velocity);
+          acceleration.set(0, 0, 0); 
+
+          const targetPos = obj.position.clone().add(velocity);
+          dummy.position.copy(obj.position);
+          dummy.lookAt(targetPos);
+          
+          dummy.rotateY(Math.PI / 2); 
+          obj.quaternion.slerp(dummy.quaternion, 0.02);
+        }
+      }
+      animate();
+
+      // カメラとセンサーの起動
+      startBtn.addEventListener('click', async () => {
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          try {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission !== 'granted') {
+              alert('センサーの使用が拒否されました。設定から許可してください。');
+              return;
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        }
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          webcam.srcObject = stream;
+        } catch (error) {
+          alert('カメラへのアクセスが拒否されました。');
+          return;
+        }
+        startScreen.style.display = 'none';
+      });
+    </script>
+  </body>
+</html>
