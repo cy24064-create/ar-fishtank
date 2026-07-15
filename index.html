@@ -4,13 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>360度 デジタル水族館</title>
-    <!-- A-Frameとアニメーション用のライブラリのみを使用（不安定なAR.jsは完全に排除） -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     <style>
       body, html { margin: 0; padding: 0; overflow: hidden; background-color: #000; }
       
-      /* 現実のカメラ映像を背景として全画面に敷き詰める */
       #webcam-bg {
         position: absolute;
         top: 0; left: 0; width: 100vw; height: 100vh;
@@ -18,14 +16,12 @@
         z-index: 1;
       }
 
-      /* ARの3D空間をカメラ映像の上に透明に重ねる */
       #ar-scene-container {
         position: absolute;
         top: 0; left: 0; width: 100vw; height: 100vh;
         z-index: 2;
       }
 
-      /* スタート画面（カメラとセンサーの許可を取るための必須UI） */
       #start-screen {
         position: absolute;
         top: 0; left: 0; width: 100vw; height: 100vh;
@@ -53,10 +49,10 @@
   </head>
   <body>
 
-    <!-- 1. 現実のカメラ背景 -->
+    <!-- 現実のカメラ背景 -->
     <video id="webcam-bg" autoplay playsinline muted></video>
 
-    <!-- 2. スタート画面 -->
+    <!-- スタート画面 -->
     <div id="start-screen">
       <h2 style="margin-bottom: 10px;">デジタル水族館</h2>
       <p style="font-size: 14px; color: #aaa; margin-bottom: 30px;">
@@ -65,7 +61,7 @@
       <button id="start-btn">スタート</button>
     </div>
 
-    <!-- 3. A-Frameの3D空間（透明） -->
+    <!-- 3D空間 -->
     <div id="ar-scene-container">
       <a-scene 
         embedded 
@@ -76,14 +72,15 @@
           <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
         </a-assets>
 
-        <!-- スマホの動き（ジャイロ）と連動するカメラ -->
+        <!-- スマホの向きと連動 -->
         <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
 
-        <!-- タイ（ユーザーの周囲を泳ぎ回る） -->
+        <!-- タイ（初期位置はカメラの少し前） -->
         <a-entity 
           id="my-fish" 
           gltf-model="#fish-model" 
           scale="0.12 0.12 0.12" 
+          position="0 0 -2"
           animation-mixer>
         </a-entity>
 
@@ -97,9 +94,8 @@
       const startScreen = document.getElementById('start-screen');
       const webcam = document.getElementById('webcam-bg');
       const fish = document.querySelector('#my-fish');
-      const sceneEl = document.querySelector('a-scene');
 
-      // 画質＆透けバグ修正（先ほどと同じ高品質化処理）
+      // 画質の向上と透過バグ修正
       fish.addEventListener('model-loaded', () => {
         const mesh = fish.getObject3D('mesh');
         if (mesh) {
@@ -119,31 +115,62 @@
         }
       });
 
-      // 遊泳アニメーション（ユーザーから半径2.5メートルの円周上をぐるぐる泳ぐ）
-      let angle = 0;
-      const orbitRadius = 2.5;
+      // 🐟 不規則でなめらかな縦横無尽アルゴリズム（Boids風ステアリング）
+      const velocity = new THREE.Vector3(0, 0, -0.01); // 初期の進行方向
+      const acceleration = new THREE.Vector3();
+      const dummy = new THREE.Object3D(); // 向き計算用の透明なダミー
 
       function animate() {
         requestAnimationFrame(animate);
+        
         if (fish && fish.object3D) {
-          angle += 0.008; // 泳ぐスピード
+          const obj = fish.object3D;
 
-          // あなたを中心に、半径2.5mの距離を泳ぎ回る
-          fish.object3D.position.x = Math.cos(angle) * orbitRadius;
-          fish.object3D.position.z = Math.sin(angle) * orbitRadius;
+          // 1. ランダムに方向を変えようとする力（少しずつ不規則に動く）
+          const wanderX = (Math.random() - 0.5) * 0.0006;
+          const wanderY = (Math.random() - 0.5) * 0.0003; // 上下は少し控えめに
+          const wanderZ = (Math.random() - 0.5) * 0.0006;
+          acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
+
+          // 2. 見失わないための空間制御（離れすぎたら戻し、近すぎたら離す）
+          const dist = obj.position.length();
+          if (dist > 3.0) {
+            // 3m以上離れたら中心へ向かう力を加える
+            acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
+          } else if (dist < 1.0) {
+            // 1m以内に来たら外へ逃げる
+            acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
+          }
+
+          // 上下の限界（高すぎず低すぎず）
+          if (obj.position.y > 0.8) {
+            acceleration.y -= 0.0003;
+          } else if (obj.position.y < -0.8) {
+            acceleration.y += 0.0003;
+          }
+
+          // 3. スピードの計算と反映
+          velocity.add(acceleration);
+          velocity.clampLength(0.005, 0.012); // ゆったり泳ぐスピード（最小〜最大）
+          obj.position.add(velocity);
+          acceleration.set(0, 0, 0); // 力をリセット
+
+          // 4. なめらかな方向転換（進んでいる方向へ頭を向ける）
+          const targetPos = obj.position.clone().add(velocity);
+          dummy.position.copy(obj.position);
+          dummy.lookAt(targetPos);
           
-          // 魚の上下の揺らぎ（ゆったりと昇り降りする）
-          fish.object3D.position.y = Math.sin(angle * 4) * 0.3;
+          // モデルの向き補正（もし横向きや後ろ向きに泳ぐ場合は、ここを -Math.PI / 2 などに変更します）
+          dummy.rotateY(Math.PI / 2); 
 
-          // 常に円の進行方向を向く
-          fish.object3D.rotation.y = -angle + Math.PI / 2;
+          // 現在の向きから目標の向きへ、なめらかに体を回転させる
+          obj.quaternion.slerp(dummy.quaternion, 0.02);
         }
       }
       animate();
 
-      // スタートボタンを押した時の処理（カメラとセンサーを起動）
+      // カメラとセンサーの起動
       startBtn.addEventListener('click', async () => {
-        // 1. スマホの傾きセンサー（ジャイロ）の許可を取る
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
           try {
             const permission = await DeviceOrientationEvent.requestPermission();
@@ -155,8 +182,6 @@
             console.error(error);
           }
         }
-
-        // 2. スマホの背面カメラ映像を取得して背景に流す
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
           webcam.srcObject = stream;
@@ -164,8 +189,6 @@
           alert('カメラへのアクセスが拒否されました。');
           return;
         }
-
-        // 3. UIを消して水族館スタート
         startScreen.style.display = 'none';
       });
     </script>
