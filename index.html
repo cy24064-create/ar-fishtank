@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <title>ARデジタル水族館</title>
-    <!-- 空間トラッキング（WebXR）に対応した最新のA-Frameライブラリ -->
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <!-- 通常のカメラARを強制する、安定したA-FrameとAR.jsの組み合わせ -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-      /* スタート用のおしゃれなPOP風画面 */
       #welcome-screen {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -15,9 +15,9 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 9999;
+        z-index: 99999;
         color: white;
-        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-family: sans-serif;
         text-align: center;
       }
       #start-btn {
@@ -30,11 +30,7 @@
         cursor: pointer;
         font-weight: bold;
         box-shadow: 0 4px 15px rgba(0,210,255,0.4);
-        transition: transform 0.2s;
         margin-top: 30px;
-      }
-      #start-btn:active {
-        transform: scale(0.95);
       }
       #instructions {
         position: absolute;
@@ -57,40 +53,37 @@
   </head>
   <body style="margin: 0px; overflow: hidden;">
 
-    <!-- スタート画面（iOSのセキュリティ制限と空間初期化を同時に行う） -->
+    <!-- スタート画面 -->
     <div id="welcome-screen">
       <h1 style="margin: 0 20px; font-size: 26px; letter-spacing: 2px;">ARデジタルいけす</h1>
       <p style="font-size: 14px; color: #8ec5fc; margin: 15px 30px; line-height: 1.6;">
-        お使いのスマホを空間にかざして、<br>自由に泳ぎ回る魚たちを探してみよう！
+        カメラをかざして、泳ぎ回るタイを探してみよう！
       </p>
       <button id="start-btn">デジタルいけすに入る</button>
     </div>
 
     <!-- 案内表示 -->
-    <div id="instructions">スマホをゆっくり左右に動かして空間をスキャンしてください</div>
+    <div id="instructions">光るパスの上を泳ぐタイをスマホで追いかけよう！</div>
 
     <!-- 
-      【WebXR空間認識シーン】
-      ARモード（webxr="type: ar"）で起動し、スマホのジャイロとカメラを使って空間（床・天井・壁）を認識。
-      魚の位置が現実の部屋の座標に完全にピン留め（固定）されます。
+      VRモード関連を完全に排除 (vr-mode-ui="enabled: false")。
+      AR.jsのwebcam機能で、1画面のカメラ映像を常に強制します。
     -->
     <a-scene 
-      webxr="optionalFeatures: local-floor, viewer; referenceSpaceType: local-floor;" 
-      xr-mode-ui="enabled: false"
-      renderer="colorManagement: true; alpha: true;">
+      embedded 
+      arjs="sourceType: webcam; debugUIEnabled: false;"
+      vr-mode-ui="enabled: false">
       
       <a-assets>
         <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
       </a-assets>
 
       <!-- 
-        【デジタル空間いけす】
-        現実の床から1メートルの高さ（テーブルの上付近）に、半径1.2メートルの空間いけすを設置します。
-        カメラをどこに向けても、このいけすはあなたの部屋の「最初に向いた方向のその場」に固定されます。
+        カメラから少し前方（position="0 -0.8 -2"）に空間パスとタイを固定配置 
       -->
-      <a-entity id="aquarium-space" position="0 1 -2" visible="false">
+      <a-entity id="aquarium-space" position="0 -0.8 -2" visible="false">
         
-        <!-- タイの3Dモデル（サイズを調整し、くねくね自律遊泳させます） -->
+        <!-- タイの3Dモデル -->
         <a-entity 
           id="my-fish" 
           gltf-model="#fish-model" 
@@ -98,14 +91,13 @@
           position="0 0 0">
         </a-entity>
 
-        <!-- 泳ぐ目印となる光るネオンブルーのパス -->
+        <!-- 光るネオンブルーのパス -->
         <a-ring color="#00f0ff" rotation="-90 0 0" radius-inner="1.19" radius-outer="1.2" material="shader: flat; opacity: 0.7;"></a-ring>
         <a-ring color="#0077ff" rotation="-90 0 0" radius-inner="1.16" radius-outer="1.17" material="shader: flat; opacity: 0.3;"></a-ring>
 
       </a-entity>
 
-      <!-- スマホのカメラ視点 -->
-      <a-entity camera position="0 1.6 0"></a-entity>
+      <a-entity camera></a-entity>
     </a-scene>
 
     <script>
@@ -117,54 +109,28 @@
       const fish = document.querySelector('#my-fish');
       
       let angle = 0;
-      const pathRadius = 1.18; // 泳ぐパスの半径
+      const pathRadius = 1.18; 
 
-      // 1. スタートボタンが押された時の処理（カメラとジャイロの権限許可）
       startBtn.addEventListener('click', () => {
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-          DeviceOrientationEvent.requestPermission()
-            .then(permissionState => {
-              if (permissionState === 'granted') {
-                launchAR();
-              } else {
-                alert('カメラとセンサーの許可が必要です。');
-              }
-            })
-            .catch(console.error);
-        } else {
-          launchAR();
-        }
-      });
-
-      function launchAR() {
+        // スタートボタンを押した瞬間に画面を1画面カメラに切り替える
         welcomeScreen.style.display = 'none';
         instructions.style.display = 'block';
-        
-        // A-FrameにARモード（カメラ透過の空間固定）で起動するよう命令
-        sceneEl.enterVR();
-        
-        // 1秒後に水槽を可視化し、案内を「探してみよう」に切り替える
-        setTimeout(() => {
-          aquariumSpace.setAttribute('visible', 'true');
-          instructions.innerText = "光るパスの上を泳ぐタイをスマホで追いかけよう！";
-        }, 1500);
-      }
+        aquariumSpace.setAttribute('visible', 'true');
+      });
 
-      // 2. 魚のリアルな遊泳ロジック（パスに沿ってくねくね泳ぐ）
+      // 泳ぎ＆くねくねアニメーション
       function animate() {
         requestAnimationFrame(animate);
 
         if (fish && fish.object3D && aquariumSpace.getAttribute('visible') === 'true') {
-          angle += 0.012; // 優雅に泳ぐスピード
+          angle += 0.012;
 
-          // 光るパスの上をなぞる座標計算
+          // 軌道に沿って移動
           fish.object3D.position.x = Math.cos(angle) * pathRadius;
           fish.object3D.position.z = Math.sin(angle) * pathRadius;
 
-          // 尾ひれをくねくね動かすためのリアルなブレの計算（物理シミュレーション）
+          // 本物の魚らしいくねくねモーション
           const wiggle = Math.sin(angle * 12) * 0.09;
-
-          // 常に円の進行方向（頭）を向かせ、くねくねを合成
           fish.object3D.rotation.y = -angle + Math.PI / 2 + wiggle;
         }
       }
