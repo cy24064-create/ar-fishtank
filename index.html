@@ -18,8 +18,9 @@
             if (this.data.action === 'show-card') {
               document.getElementById('fish-info-card').style.display = 'block';
             } else if (this.data.action === 'hide-sushi') {
-              document.getElementById('dishes-space').setAttribute('visible', 'false');
-              document.getElementById('my-fish').setAttribute('visible', 'true');
+              // 💡 修正: 確実に非表示にするための記述に変更
+              document.getElementById('dishes-space').setAttribute('visible', false);
+              document.getElementById('my-fish').setAttribute('visible', true);
               document.getElementById('instructions').style.display = 'none';
             }
           });
@@ -84,7 +85,6 @@
         raycaster="objects: .clickable">
         
         <a-assets>
-          <!-- 💡 読み込めない「sushi_dish.glb」を削除しました（tai.glbのみ読み込む） -->
           <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
         </a-assets>
 
@@ -98,20 +98,20 @@
           gltf-model="#fish-model" 
           scale="0.12 0.12 0.12" 
           position="0 0 -2"
-          animation-mixer>
+          animation-mixer
+          visible="true">
           <!-- 当たり判定 -->
           <a-sphere class="clickable" radius="15" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
         </a-entity>
         
         <!-- 料理 -->
         <a-entity id="dishes-space" visible="false">
-          <!-- 💡 仮の料理（エラーにならないよう図形で代用） -->
           <a-entity 
             id="sushi-dish"
             class="clickable"
             tap-action="action: hide-sushi"
             position="0 0 -1.5">
-            <!-- 仮のお皿（白い円柱）と仮のお寿司（赤い四角） -->
+            <!-- 仮のお皿と仮のお寿司 -->
             <a-cylinder radius="0.3" height="0.02" color="white"></a-cylinder>
             <a-box width="0.1" height="0.05" depth="0.2" color="red" position="0 0.03 0"></a-box>
             <!-- 料理用の当たり判定 -->
@@ -137,28 +137,29 @@
       const seeActualBtn = document.getElementById('see-actual-btn');
       const dishesSpace = document.getElementById('dishes-space');
 
-      // 閉じるボタンが押されたらポップアップを隠す
+      // 閉じるボタン
       closeInfoBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
       });
       
-      // 「この魚の料理」ボタンの動作
+      // 「この魚の料理」ボタン
       dishesBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
-        fish.setAttribute('visible', 'false');
-        dishesSpace.setAttribute('visible', 'true');
+        fish.setAttribute('visible', false); // 💡 修正: booleanで設定
+        dishesSpace.setAttribute('visible', true); // 💡 修正: booleanで設定
         instructions.innerText = "この魚を使った料理が登場！タップして戻る";
         instructions.style.display = 'block';
       });
 
-      // 「実際に見る」ボタンの動作
+      // 「実際に見る」ボタン
       seeActualBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
         instructions.innerText = "ただいま、おかもちをお持ちいたします。";
         instructions.style.display = 'block';
+        // 💡 修正: 4秒から8秒に延長しました
         setTimeout(() => {
           instructions.style.display = 'none';
-        }, 4000);
+        }, 8000);
       });
 
       // 画質向上スクリプト
@@ -180,7 +181,8 @@
 
       function animate() {
         requestAnimationFrame(animate);
-        if (fish && fish.object3D && fish.getAttribute('visible') === 'true') {
+        // 💡 修正: 確実にシステムが「表示中」と認識できるように object3D.visible で判定
+        if (fish && fish.object3D && fish.object3D.visible) {
           const obj = fish.object3D;
           const wanderX = (Math.random() - 0.5) * 0.0006;
           const wanderY = (Math.random() - 0.5) * 0.0003; 
@@ -208,7 +210,7 @@
       }
       animate();
 
-      // カメラとセンサーの起動
+      // カメラ起動
       startBtn.addEventListener('click', async () => {
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
           try {
