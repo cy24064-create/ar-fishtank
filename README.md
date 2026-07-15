@@ -1,2 +1,2 @@
-# ar-ikesu
+# ar-fishtank
 ARでいけすを作成
