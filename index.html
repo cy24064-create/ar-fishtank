@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- タブのタイトル -->
     <title>四十八漁業</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
@@ -13,7 +14,7 @@
         schema: { action: { type: 'string' } },
         init: function () {
           this.el.addEventListener('click', (e) => {
-            e.stopPropagation();
+            e.stopPropagation(); // 重複タップを防止
             if (this.data.action === 'show-card') {
               document.getElementById('fish-info-card').style.display = 'block';
             } else if (this.data.action === 'hide-sushi') {
@@ -28,63 +29,27 @@
 
     <style>
       body, html { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Helvetica Neue', Arial, sans-serif; }
-      
-      #webcam-bg {
-        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-        object-fit: cover; z-index: 1;
-      }
-      #ar-scene-container {
-        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2;
-      }
-      #start-screen {
-        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column;
-        justify-content: center; align-items: center; z-index: 9999; color: white;
-      }
-      #start-btn {
-        padding: 15px 40px; font-size: 18px; background: #00a2ff; color: white;
-        border: none; border-radius: 30px; font-weight: bold;
-        box-shadow: 0 4px 10px rgba(0,162,255,0.5); cursor: pointer;
-      }
-      #fish-info-card {
-        display: none; position: absolute; top: 50%; left: 50%;
-        transform: translate(-50%, -50%); width: 85%; max-width: 320px;
-        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-        border-radius: 15px; padding: 25px 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        z-index: 10000; color: #333; animation: fadeIn 0.3s ease-out;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translate(-50%, -45%); }
-        to { opacity: 1; transform: translate(-50%, -50%); }
-      }
+      #webcam-bg { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; }
+      #ar-scene-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; }
+      #start-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white; }
+      #start-btn { padding: 15px 40px; font-size: 18px; background: #00a2ff; color: white; border: none; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,162,255,0.5); cursor: pointer; }
+      #fish-info-card { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10000; color: #333; animation: fadeIn 0.3s ease-out; }
+      @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
       .info-header { font-size: 22px; font-weight: bold; color: #002b49; border-bottom: 2px solid #00a2ff; padding-bottom: 10px; margin-bottom: 15px; }
       .info-row { margin-bottom: 12px; font-size: 14px; line-height: 1.5; }
       .info-label { font-weight: bold; color: #0066ff; display: block; font-size: 12px; margin-bottom: 4px; }
       .action-button-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-      .action-btn {
-        flex: 1; padding: 12px; background: #00a2ff; color: white; text-align: center;
-        border-radius: 25px; font-weight: bold; border: none; cursor: pointer;
-        font-size: 13px; box-shadow: 0 4px 10px rgba(0,162,255,0.3);
-      }
+      .action-btn { flex: 1; padding: 12px; background: #00a2ff; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; box-shadow: 0 4px 10px rgba(0,162,255,0.3); }
       .action-btn:hover { background: #0088dd; }
-      .close-btn {
-        display: block; width: 100%; padding: 12px; margin-top: 15px;
-        background: #002b49; color: white; text-align: center; border-radius: 25px;
-        font-weight: bold; border: none; cursor: pointer;
-      }
-      #instructions {
-        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-        background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3);
-        color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 14px;
-        z-index: 998; text-align: center; pointer-events: none; display: none; width: 80%;
-      }
+      .close-btn { display: block; width: 100%; padding: 12px; margin-top: 15px; background: #002b49; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; }
+      #instructions { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 14px; z-index: 998; text-align: center; pointer-events: none; display: none; width: 80%; }
     </style>
   </head>
   <body>
 
     <video id="webcam-bg" autoplay playsinline muted></video>
 
-    <!-- スタート画面（四十八漁業に変更） -->
+    <!-- スタート画面 -->
     <div id="start-screen">
       <h2 style="margin-bottom: 10px;">四十八漁業</h2>
       <p style="font-size: 14px; color: #aaa; margin-bottom: 30px;">
@@ -134,8 +99,8 @@
           scale="0.12 0.12 0.12" 
           position="0 0 -2"
           animation-mixer>
-          <!-- 確実なタップ判定：透明度1%の大きな球体（スマホに無視させない工夫） -->
-          <a-sphere radius="8" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
+          <!-- 💡 修正箇所：当たり判定のボール自体に class="clickable" を追加！これで絶対に反応します -->
+          <a-sphere class="clickable" radius="15" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
         </a-entity>
         
         <!-- 料理 -->
@@ -148,8 +113,8 @@
             scale="0.2 0.2 0.2" 
             position="0 0.2 -1.5"
             rotation="0 0 0">
-            <!-- 料理用のタップ判定 -->
-            <a-sphere radius="5" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
+            <!-- 💡 料理用の当たり判定にも class="clickable" を追加 -->
+            <a-sphere class="clickable" radius="10" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
           </a-entity>
         </a-entity>
 
