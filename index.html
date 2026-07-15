@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <!-- タブのタイトル -->
     <title>四十八漁業</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
@@ -17,11 +16,6 @@
             e.stopPropagation(); // 重複タップを防止
             if (this.data.action === 'show-card') {
               document.getElementById('fish-info-card').style.display = 'block';
-            } else if (this.data.action === 'hide-sushi') {
-              // 💡 修正: 確実に非表示にするための記述に変更
-              document.getElementById('dishes-space').setAttribute('visible', false);
-              document.getElementById('my-fish').setAttribute('visible', true);
-              document.getElementById('instructions').style.display = 'none';
             }
           });
         }
@@ -43,7 +37,15 @@
       .action-btn { flex: 1; padding: 12px; background: #00a2ff; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; box-shadow: 0 4px 10px rgba(0,162,255,0.3); }
       .action-btn:hover { background: #0088dd; }
       .close-btn { display: block; width: 100%; padding: 12px; margin-top: 15px; background: #002b49; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; }
-      #instructions { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 14px; z-index: 998; text-align: center; pointer-events: none; display: none; width: 80%; }
+      
+      #instructions { 
+        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
+        background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); 
+        color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 14px; 
+        z-index: 998; text-align: center; display: none; width: 80%; 
+        /* 💡 修正: タップできるように変更しました */
+        pointer-events: auto; cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -59,7 +61,7 @@
       <button id="start-btn">スタート</button>
     </div>
 
-    <!-- 案内表示 -->
+    <!-- 案内表示（タップで戻るボタンとして機能） -->
     <div id="instructions"></div>
 
     <!-- 魚の詳細情報カード -->
@@ -88,9 +90,17 @@
           <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
         </a-assets>
 
-        <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
+        <!-- 💡 修正: カメラの中に料理を入れることで、常に画面の真ん中に表示されます -->
+        <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;">
+          <!-- 料理のモデル -->
+          <a-entity id="dishes-space" visible="false" position="0 -0.1 -1.5">
+            <!-- 仮のお皿と仮のお寿司 -->
+            <a-cylinder radius="0.3" height="0.02" color="white"></a-cylinder>
+            <a-box width="0.1" height="0.05" depth="0.2" color="red" position="0 0.03 0"></a-box>
+          </a-entity>
+        </a-entity>
 
-        <!-- タイ -->
+        <!-- タイ（こちらは空間を泳ぐのでカメラの外のまま） -->
         <a-entity 
           id="my-fish" 
           class="clickable"
@@ -102,21 +112,6 @@
           visible="true">
           <!-- 当たり判定 -->
           <a-sphere class="clickable" radius="15" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
-        </a-entity>
-        
-        <!-- 料理 -->
-        <a-entity id="dishes-space" visible="false">
-          <a-entity 
-            id="sushi-dish"
-            class="clickable"
-            tap-action="action: hide-sushi"
-            position="0 0 -1.5">
-            <!-- 仮のお皿と仮のお寿司 -->
-            <a-cylinder radius="0.3" height="0.02" color="white"></a-cylinder>
-            <a-box width="0.1" height="0.05" depth="0.2" color="red" position="0 0.03 0"></a-box>
-            <!-- 料理用の当たり判定 -->
-            <a-sphere class="clickable" radius="10" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
-          </a-entity>
         </a-entity>
 
         <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
@@ -137,6 +132,17 @@
       const seeActualBtn = document.getElementById('see-actual-btn');
       const dishesSpace = document.getElementById('dishes-space');
 
+      // 💡 追加: 下のコメント（案内）をタップした時の動作
+      instructions.addEventListener('click', () => {
+        // 情報カードを表示
+        infoCard.style.display = 'block';
+        // コメント自身を消す
+        instructions.style.display = 'none';
+        // 料理を消して魚を戻す
+        dishesSpace.setAttribute('visible', false);
+        fish.setAttribute('visible', true);
+      });
+
       // 閉じるボタン
       closeInfoBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
@@ -145,18 +151,17 @@
       // 「この魚の料理」ボタン
       dishesBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
-        fish.setAttribute('visible', false); // 💡 修正: booleanで設定
-        dishesSpace.setAttribute('visible', true); // 💡 修正: booleanで設定
-        instructions.innerText = "この魚を使った料理が登場！タップして戻る";
+        fish.setAttribute('visible', false); 
+        dishesSpace.setAttribute('visible', true); 
+        instructions.innerText = "この魚を使った料理が登場！\n（タップして情報画面に戻る）";
         instructions.style.display = 'block';
       });
 
       // 「実際に見る」ボタン
       seeActualBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
-        instructions.innerText = "ただいま、おかもちをお持ちいたします。";
+        instructions.innerText = "ただいま、おかもちをお持ちいたします。\n（タップして情報画面に戻る）";
         instructions.style.display = 'block';
-        // 💡 修正: 4秒から8秒に延長しました
         setTimeout(() => {
           instructions.style.display = 'none';
         }, 8000);
@@ -181,7 +186,6 @@
 
       function animate() {
         requestAnimationFrame(animate);
-        // 💡 修正: 確実にシステムが「表示中」と認識できるように object3D.visible で判定
         if (fish && fish.object3D && fish.object3D.visible) {
           const obj = fish.object3D;
           const wanderX = (Math.random() - 0.5) * 0.0006;
