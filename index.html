@@ -84,8 +84,8 @@
         raycaster="objects: .clickable">
         
         <a-assets>
+          <!-- 💡 読み込めない「sushi_dish.glb」を削除しました（tai.glbのみ読み込む） -->
           <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
-          <a-asset-item id="sushi-dish-model" src="sushi_dish.glb"></a-asset-item>
         </a-assets>
 
         <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
@@ -99,21 +99,22 @@
           scale="0.12 0.12 0.12" 
           position="0 0 -2"
           animation-mixer>
-          <!-- 💡 修正箇所：当たり判定のボール自体に class="clickable" を追加！これで絶対に反応します -->
+          <!-- 当たり判定 -->
           <a-sphere class="clickable" radius="15" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
         </a-entity>
         
         <!-- 料理 -->
         <a-entity id="dishes-space" visible="false">
+          <!-- 💡 仮の料理（エラーにならないよう図形で代用） -->
           <a-entity 
             id="sushi-dish"
             class="clickable"
             tap-action="action: hide-sushi"
-            gltf-model="#sushi-dish-model" 
-            scale="0.2 0.2 0.2" 
-            position="0 0.2 -1.5"
-            rotation="0 0 0">
-            <!-- 💡 料理用の当たり判定にも class="clickable" を追加 -->
+            position="0 0 -1.5">
+            <!-- 仮のお皿（白い円柱）と仮のお寿司（赤い四角） -->
+            <a-cylinder radius="0.3" height="0.02" color="white"></a-cylinder>
+            <a-box width="0.1" height="0.05" depth="0.2" color="red" position="0 0.03 0"></a-box>
+            <!-- 料理用の当たり判定 -->
             <a-sphere class="clickable" radius="10" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
           </a-entity>
         </a-entity>
@@ -163,18 +164,6 @@
       // 画質向上スクリプト
       fish.addEventListener('model-loaded', () => {
         const mesh = fish.getObject3D('mesh');
-        if (mesh) {
-          mesh.traverse((node) => {
-            if (node.isMesh) {
-              node.material.side = THREE.DoubleSide; node.material.transparent = false; node.material.depthWrite = true;
-            }
-          });
-        }
-      });
-      
-      const sushiDish = document.getElementById('sushi-dish');
-      sushiDish.addEventListener('model-loaded', () => {
-        const mesh = sushiDish.getObject3D('mesh');
         if (mesh) {
           mesh.traverse((node) => {
             if (node.isMesh) {
