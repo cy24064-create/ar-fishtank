@@ -3,11 +3,9 @@
   <head>
     <meta charset="utf-8">
     <title>ARいけす</title>
-    <!-- A-Frameと、通常のWebAR（AR.js）を動かすための軽量ライブラリ -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-      /* 画面下部の案内テキスト */
       #instructions {
         position: absolute;
         bottom: 20px;
@@ -27,43 +25,39 @@
   </head>
   <body style="margin: 0px; overflow: hidden;">
 
-    <!-- 案内表示 -->
     <div id="instructions">スマホをテーブルにかざしてください</div>
 
-    <!-- 
-      【ARシーンの設定】
-      VRモードを完全に無効化（vr-mode-ui="enabled: false"）し、通常のスマホカメラ画面のまま起動します。
-    -->
     <a-scene 
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
+      arjs="sourceType: webcam; debugUIEnabled: false;"
       vr-mode-ui="enabled: false">
       
       <a-assets>
-        <!-- タイの3Dモデル -->
         <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
       </a-assets>
 
       <!-- 
-        【カメラをかざすだけで自動でその場に出現するいけす】
-        特定のマーカーを必要とせず、カメラを起動した位置の目の前に自動でタイを泳がせます。
+        【いけすグループの位置調整】
+        position="0 -0.5 -2.5" ➔ カメラから2.5メートル奥、少し下（机の上あたり）に配置します
       -->
-      <a-entity id="aquarium-group" position="0 -1 -3">
+      <a-entity id="aquarium-group" position="0 -0.5 -2.5">
         
-        <!-- あなたのタイの3Dモデル -->
+        <!-- 
+          【タイの大きさを縮小】
+          scale="0.01 0.01 0.01" ➔ 元のモデルが巨大すぎるため、1/100のサイズに縮小してテーブルサイズにします
+        -->
         <a-entity 
           id="my-fish" 
           gltf-model="#fish-model" 
-          scale="1 1 1" 
+          scale="0.01 0.01 0.01" 
           position="0 0 0">
         </a-entity>
 
-        <!-- いけすの範囲を示す青い光のリング -->
-        <a-ring color="#00a2ff" rotation="-90 0 0" radius-inner="1.5" radius-outer="1.53" opacity="0.5"></a-ring>
+        <!-- いけすの青いリング（こちらも魚のサイズに合わせて少しコンパクトに調整） -->
+        <a-ring color="#00a2ff" rotation="-90 0 0" radius-inner="0.6" radius-outer="0.62" opacity="0.5"></a-ring>
 
       </a-entity>
 
-      <!-- カメラの設定 -->
       <a-entity camera></a-entity>
     </a-scene>
 
@@ -71,18 +65,17 @@
       const fish = document.querySelector('#my-fish');
       let angle = 0;
 
-      // 🔄 【無限ループ：タイを自動で泳がせる】
       function animate() {
         requestAnimationFrame(animate);
 
         if (fish && fish.object3D) {
-          angle += 0.015; // 泳ぐスピード
+          angle += 0.02; // 泳ぐスピードを少しだけアップ
 
-          // 目の前の空間を綺麗な円を描いてスイスイ泳ぎ回ります
-          fish.object3D.position.x = Math.cos(angle) * 1.5;
-          fish.object3D.position.z = Math.sin(angle) * 1.5;
+          // 半径0.5メートルの円を描いて、いけすのリングに沿って泳がせます
+          fish.object3D.position.x = Math.cos(angle) * 0.5;
+          fish.object3D.position.z = Math.sin(angle) * 0.5;
 
-          // 魚の頭を常に進行方向に向けます
+          // 魚が円の進行方向（常に前）を向いて泳ぐようにします
           fish.object3D.rotation.y = -angle + Math.PI / 2;
         }
       }
