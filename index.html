@@ -3,19 +3,19 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>四十八漁業</title>
+    <title>四十八漁業 - 鮮度とストーリーをお届け</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
-    <!-- AR専用の確実なタップ検知システム -->
+    <!-- ARタップ検知システム -->
     <script>
       AFRAME.registerComponent('tap-action', {
         schema: { action: { type: 'string' } },
         init: function () {
           this.el.addEventListener('click', (e) => {
-            e.stopPropagation(); // 重複タップを防止
+            e.stopPropagation();
             if (this.data.action === 'show-card') {
-              document.getElementById('fish-info-card').style.display = 'block';
+              openFishCard();
             }
           });
         }
@@ -23,28 +23,48 @@
     </script>
 
     <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Helvetica Neue', Arial, sans-serif; }
+      body, html { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
       #webcam-bg { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; }
       #ar-scene-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; }
       #start-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white; }
       #start-btn { padding: 15px 40px; font-size: 18px; background: #00a2ff; color: white; border: none; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,162,255,0.5); cursor: pointer; }
-      #fish-info-card { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10000; color: #333; animation: fadeIn 0.3s ease-out; }
-      @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-      .info-header { font-size: 22px; font-weight: bold; color: #002b49; border-bottom: 2px solid #00a2ff; padding-bottom: 10px; margin-bottom: 15px; }
-      .info-row { margin-bottom: 12px; font-size: 14px; line-height: 1.5; }
-      .info-label { font-weight: bold; color: #0066ff; display: block; font-size: 12px; margin-bottom: 4px; }
-      .action-button-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-      .action-btn { flex: 1; padding: 12px; background: #00a2ff; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; box-shadow: 0 4px 10px rgba(0,162,255,0.3); }
-      .action-btn:hover { background: #0088dd; }
-      .close-btn { display: block; width: 100%; padding: 12px; margin-top: 15px; background: #002b49; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; }
       
-      #instructions { 
-        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
-        background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); 
-        color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 14px; 
-        z-index: 998; text-align: center; display: none; width: 80%; 
-        pointer-events: auto; cursor: pointer;
-      }
+      /* --- ポップアップカード & タブデザイン --- */
+      #fish-info-card { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 88%; max-width: 350px; background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(12px); border-radius: 18px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); z-index: 10000; color: #2d3748; animation: fadeIn 0.3s ease-out; }
+      @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+      .tab-menu { display: flex; border-bottom: 2px solid #edf2f7; margin-bottom: 12px; }
+      .tab-btn { flex: 1; padding: 10px 0; background: none; border: none; font-size: 13px; font-weight: bold; color: #a0aec0; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+      .tab-btn.active { color: #0088ff; border-bottom-color: #0088ff; }
+
+      .tab-content { display: none; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+      .tab-content.active { display: block; }
+
+      .fish-img { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
+      .info-header { font-size: 18px; font-weight: bold; color: #002b49; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+      .info-row { margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #4a5568; }
+      .info-label { font-weight: bold; color: #0088ff; display: block; font-size: 11px; margin-bottom: 2px; }
+
+      /* 生産者の想い吹き出し */
+      .quote-box { background: #f0f7ff; border-left: 4px solid #0088ff; padding: 10px; border-radius: 6px; font-size: 12px; color: #2d3748; margin-bottom: 12px; line-height: 1.5; }
+      
+      /* タイムラインデザイン */
+      .timeline { background: #faf5ff; border: 1px solid #e9d8fd; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
+      .timeline-title { font-size: 11px; font-weight: bold; color: #6b46c1; margin-bottom: 6px; }
+      .timeline-item { font-size: 11px; color: #4a5568; display: flex; align-items: center; margin-bottom: 4px; }
+      .timeline-time { font-weight: bold; color: #805ad5; width: 65px; display: inline-block; }
+
+      /* 神経締めステップ図解デザイン */
+      .shinkei-diagram { display: flex; justify-content: space-between; background: #edf2f7; padding: 8px; border-radius: 8px; margin: 8px 0; text-align: center; }
+      .shinkei-step { flex: 1; font-size: 10px; font-weight: bold; color: #2d3748; }
+      .shinkei-step span { display: block; font-size: 14px; margin-bottom: 2px; }
+
+      /* 下部ボタン */
+      .action-button-container { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
+      .action-btn { flex: 1; padding: 10px; background: #00a2ff; color: white; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 11px; box-shadow: 0 4px 10px rgba(0,162,255,0.3); }
+      .close-btn { display: block; width: 100%; padding: 10px; margin-top: 8px; background: #002b49; color: white; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; }
+      
+      #instructions { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 13px; z-index: 998; text-align: center; display: none; width: 80%; pointer-events: auto; cursor: pointer; }
     </style>
   </head>
   <body>
@@ -60,16 +80,67 @@
       <button id="start-btn">スタート</button>
     </div>
 
-    <!-- 案内表示（タップで戻るボタンとして機能） -->
+    <!-- 案内表示 -->
     <div id="instructions"></div>
 
-    <!-- 魚の詳細情報カード -->
+    <!-- 魚の詳細情報カード（完成版） -->
     <div id="fish-info-card">
-      <div class="info-header">🐟 豊浜産 活〆真鯛</div>
-      <div class="info-row"><span class="info-label">📍 漁獲した場所</span>愛知県 南知多 豊浜漁港</div>
-      <div class="info-row"><span class="info-label">⏱️ 水揚げ時間</span>約8時間前（今朝獲れ！）</div>
-      <div class="info-row"><span class="info-label">👨‍🌾 生産者・漁船</span>第十八 豊漁丸（漁師・鈴木さん）</div>
-      <div class="info-row"><span class="info-label">✨ おいしさの秘密</span>潮流の激しい海域で育ったため、身が引き締まり脂の乗りが抜群。船上で素早く「活〆処理」を行っているため、鮮度と旨味が最大限に引き出されています！</div>
+      
+      <!-- タブボタン -->
+      <div class="tab-menu">
+        <button class="tab-btn active" id="btn-tab-basic">📌 基本情報 & ストーリー</button>
+        <button class="tab-btn" id="btn-tab-story">💡 美味しさの秘密</button>
+      </div>
+
+      <!-- タブ1: 基本情報 & リアルタイムタイムライン -->
+      <div id="tab-basic" class="tab-content active">
+        <img src="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?auto=format&fit=crop&w=600&q=80" alt="真鯛" class="fish-img">
+        <div class="info-header">
+          <span>🐟 豊浜産 活〆真鯛</span>
+        </div>
+
+        <div class="quote-box">
+          💬 <strong>漁師・鈴木さんの一言</strong><br>
+          「今朝6時、最高の鯛が揚がったよ！船の上ですぐに完璧な仕込みをして送ったから、とびきりの鮮度をしっかり味わってね！」
+        </div>
+
+        <!-- リアルタイム・タイムライン -->
+        <div class="timeline">
+          <div class="timeline-title">⏱️ 産地直送ライブ・タイムライン</div>
+          <div class="timeline-item"><span class="timeline-time">【06:00】</span> 豊浜沖にて水揚げ・船上神経締め</div>
+          <div class="timeline-item"><span class="timeline-time">【08:00】</span> 漁港からお店へダイレクト発送</div>
+          <div class="timeline-item"><span class="timeline-time" id="current-time-label">【現在】</span> お客様のテーブルへ到着！✨</div>
+        </div>
+
+        <div class="info-row"><span class="info-label">📍 漁獲地</span>愛知県 南知多 豊浜漁港</div>
+        <div class="info-row"><span class="info-label">👨‍🌾 生産者・漁船</span>第十八 豊漁丸（漁師・鈴木 健太郎さん）</div>
+      </div>
+
+      <!-- タブ2: 美味しさの秘密（神経締め図解＆六次産業） -->
+      <div id="tab-story" class="tab-content">
+        
+        <div class="info-label" style="font-size: 13px;">⚡ ① 0.1秒の職人技「船上・神経締め」</div>
+        <p style="font-size: 12px; line-height: 1.4; color: #4a5568; margin-top: 4px;">
+          「船の上で暴れさせない。それが旨味を守る秘訣だ。」
+        </p>
+
+        <!-- 神経締めの図解ステップ -->
+        <div class="shinkei-diagram">
+          <div class="shinkei-step"><span>📍</span>1. 脳天一閃<br>(ストレス0)</div>
+          <div class="shinkei-step"><span>⚡</span>2. 神経締め<br>(旨味固定)</div>
+          <div class="shinkei-step"><span>🩸</span>3. 完全血抜き<br>(臭み除去)</div>
+        </div>
+        <p style="font-size: 11px; color: #718096; margin-bottom: 12px;">
+          ※魚にストレスを与えず死後硬直を遅らせることで、旨味成分（イノシン酸）と獲れたての歯ごたえを両立させています。
+        </p>
+
+        <div class="info-label" style="font-size: 13px; margin-top: 10px;">🚚 ② 中間ゼロ「超ダイレクト流通（六次産業）」</div>
+        <div class="info-row" style="margin-top: 4px;">
+          市場や仲卸を挟まず、**漁場からお店へダイレクト直結**。無駄な時間を一切挟まないからこそ実現できる「海で獲れた本物の鮮度」をお楽しみいただけます。
+        </div>
+      </div>
+
+      <!-- 下部ボタンエリア -->
       <div class="action-button-container">
         <button class="action-btn" id="dishes-btn">この魚の料理</button>
         <button class="action-btn" id="see-actual-btn">実際に見る</button>
@@ -91,15 +162,13 @@
 
         <!-- カメラ -->
         <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;">
-          <!-- 料理のモデル -->
           <a-entity id="dishes-space" visible="false" position="0 -0.1 -1.5">
-            <!-- 仮のお皿と仮のお寿司 -->
             <a-cylinder radius="0.3" height="0.02" color="white"></a-cylinder>
             <a-box width="0.1" height="0.05" depth="0.2" color="red" position="0 0.03 0"></a-box>
           </a-entity>
         </a-entity>
 
-        <!-- タイ（自律遊泳する魚） -->
+        <!-- タイ（自律遊泳） -->
         <a-entity 
           id="my-fish" 
           class="clickable"
@@ -109,7 +178,6 @@
           position="0 0 -2"
           animation-mixer
           visible="true">
-          <!-- 当たり判定 -->
           <a-sphere class="clickable" radius="15" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
         </a-entity>
 
@@ -131,20 +199,47 @@
       const seeActualBtn = document.getElementById('see-actual-btn');
       const dishesSpace = document.getElementById('dishes-space');
 
-      // 案内をタップした時の動作
-      instructions.addEventListener('click', () => {
+      // タブ切り替え処理
+      const btnTabBasic = document.getElementById('btn-tab-basic');
+      const btnTabStory = document.getElementById('btn-tab-story');
+      const tabBasic = document.getElementById('tab-basic');
+      const tabStory = document.getElementById('tab-story');
+
+      btnTabBasic.addEventListener('click', () => {
+        btnTabBasic.classList.add('active');
+        btnTabStory.classList.remove('active');
+        tabBasic.classList.add('active');
+        tabStory.classList.remove('active');
+      });
+
+      btnTabStory.addEventListener('click', () => {
+        btnTabStory.classList.add('active');
+        btnTabBasic.classList.remove('active');
+        tabStory.classList.add('active');
+        tabBasic.classList.remove('active');
+      });
+
+      // カードを開いたときに現在時刻をタイムラインに自動セットする関数
+      function openFishCard() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('current-time-label').innerText = `【${hours}:${minutes}】`;
         infoCard.style.display = 'block';
+      }
+
+      // 案内タップ時
+      instructions.addEventListener('click', () => {
+        openFishCard();
         instructions.style.display = 'none';
         dishesSpace.setAttribute('visible', false);
         fish.setAttribute('visible', true);
       });
 
-      // 閉じるボタン
       closeInfoBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
       });
       
-      // 「この魚の料理」ボタン
       dishesBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
         fish.setAttribute('visible', false); 
@@ -153,7 +248,6 @@
         instructions.style.display = 'block';
       });
 
-      // 「実際に見る」ボタン
       seeActualBtn.addEventListener('click', () => {
         infoCard.style.display = 'none';
         instructions.innerText = "ただいま、おかもちをお持ちいたします。\n（タップして情報画面に戻る）";
@@ -163,7 +257,6 @@
         }, 8000);
       });
 
-      // 画質向上スクリプト
       fish.addEventListener('model-loaded', () => {
         const mesh = fish.getObject3D('mesh');
         if (mesh) {
@@ -177,7 +270,7 @@
         }
       });
 
-      // 自律遊泳アルゴリズム（自然な姿勢制御版）
+      // 自然な泳ぎの制御
       const velocity = new THREE.Vector3(0, 0, -0.01); 
       const acceleration = new THREE.Vector3();
       const dummy = new THREE.Object3D(); 
@@ -189,13 +282,11 @@
           const obj = fish.object3D;
           swimTime += 0.05;
 
-          // 1. うろつきの力
           const wanderX = (Math.random() - 0.5) * 0.0006;
           const wanderY = (Math.random() - 0.5) * 0.0002;
           const wanderZ = (Math.random() - 0.5) * 0.0006;
           acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
 
-          // 2. 移動範囲の制限
           const dist = obj.position.length();
           if (dist > 3.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
           else if (dist < 1.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
@@ -203,15 +294,12 @@
           if (obj.position.y > 0.6) acceleration.y -= 0.0003;
           else if (obj.position.y < -0.6) acceleration.y += 0.0003;
 
-          // 3. 速度と位置の更新
           velocity.add(acceleration);
           velocity.clampLength(0.005, 0.012); 
           obj.position.add(velocity);
           acceleration.set(0, 0, 0); 
 
-          // 4. 自然な姿勢（向き）の計算
           let yaw = Math.atan2(velocity.x, velocity.z);
-
           const speedXZ = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
           let pitch = Math.atan2(-velocity.y, speedXZ);
           const maxPitch = THREE.MathUtils.degToRad(15);
@@ -220,15 +308,12 @@
           const wiggle = Math.sin(swimTime) * 0.05;
           const modelOffset = Math.PI / 2;
 
-          // Z軸（お腹の傾き）を0に固定！
           dummy.rotation.set(pitch, yaw + modelOffset + wiggle, 0, 'YXZ');
-
           obj.quaternion.slerp(dummy.quaternion, 0.04);
         }
       }
       animate();
 
-      // カメラ起動
       startBtn.addEventListener('click', async () => {
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
           try {
