@@ -1,233 +1,58 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>四十八漁業</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    
-    <!-- AR専用の確実なタップ検知システム -->
-    <script>
-      AFRAME.registerComponent('tap-action', {
-        schema: { action: { type: 'string' } },
-        init: function () {
-          this.el.addEventListener('click', (e) => {
-            e.stopPropagation(); // 重複タップを防止
-            if (this.data.action === 'show-card') {
-              document.getElementById('fish-info-card').style.display = 'block';
-            }
-          });
-        }
-      });
-    </script>
+// 自律遊泳アルゴリズム（修正版）
+const velocity = new THREE.Vector3(0, 0, -0.01); 
+const acceleration = new THREE.Vector3();
+const dummy = new THREE.Object3D(); 
+let swimTime = 0; // 尾びれのゆらゆら用タイマー
 
-    <style>
-      body, html { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Helvetica Neue', Arial, sans-serif; }
-      #webcam-bg { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; }
-      #ar-scene-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; }
-      #start-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white; }
-      #start-btn { padding: 15px 40px; font-size: 18px; background: #00a2ff; color: white; border: none; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,162,255,0.5); cursor: pointer; }
-      #fish-info-card { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10000; color: #333; animation: fadeIn 0.3s ease-out; }
-      @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-      .info-header { font-size: 22px; font-weight: bold; color: #002b49; border-bottom: 2px solid #00a2ff; padding-bottom: 10px; margin-bottom: 15px; }
-      .info-row { margin-bottom: 12px; font-size: 14px; line-height: 1.5; }
-      .info-label { font-weight: bold; color: #0066ff; display: block; font-size: 12px; margin-bottom: 4px; }
-      .action-button-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-      .action-btn { flex: 1; padding: 12px; background: #00a2ff; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; font-size: 13px; box-shadow: 0 4px 10px rgba(0,162,255,0.3); }
-      .action-btn:hover { background: #0088dd; }
-      .close-btn { display: block; width: 100%; padding: 12px; margin-top: 15px; background: #002b49; color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; }
-      
-      #instructions { 
-        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
-        background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); 
-        color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 14px; 
-        z-index: 998; text-align: center; display: none; width: 80%; 
-        /* 💡 修正: タップできるように変更しました */
-        pointer-events: auto; cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
+function animate() {
+  requestAnimationFrame(animate);
+  if (fish && fish.object3D && fish.object3D.visible) {
+    const obj = fish.object3D;
+    swimTime += 0.05;
 
-    <video id="webcam-bg" autoplay playsinline muted></video>
+    // 1. ランダムな力（うろつき）を加える
+    const wanderX = (Math.random() - 0.5) * 0.0006;
+    const wanderY = (Math.random() - 0.5) * 0.0002; // 上下移動は少し控えめに
+    const wanderZ = (Math.random() - 0.5) * 0.0006;
+    acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
 
-    <!-- スタート画面 -->
-    <div id="start-screen">
-      <h2 style="margin-bottom: 10px;">四十八漁業</h2>
-      <p style="font-size: 14px; color: #aaa; margin-bottom: 30px;">
-        ※泳いでいる魚をタップしてみてね！
-      </p>
-      <button id="start-btn">スタート</button>
-    </div>
+    // 2. 移動エリアの境界制限（離れすぎたら戻る）
+    const dist = obj.position.length();
+    if (dist > 3.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
+    else if (dist < 1.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
 
-    <!-- 案内表示（タップで戻るボタンとして機能） -->
-    <div id="instructions"></div>
+    if (obj.position.y > 0.6) acceleration.y -= 0.0003;
+    else if (obj.position.y < -0.6) acceleration.y += 0.0003;
 
-    <!-- 魚の詳細情報カード -->
-    <div id="fish-info-card">
-      <div class="info-header">🐟 豊浜産 活〆真鯛</div>
-      <div class="info-row"><span class="info-label">📍 漁獲した場所</span>愛知県 南知多 豊浜漁港</div>
-      <div class="info-row"><span class="info-label">⏱️ 水揚げ時間</span>約8時間前（今朝獲れ！）</div>
-      <div class="info-row"><span class="info-label">👨‍🌾 生産者・漁船</span>第十八 豊漁丸（漁師・鈴木さん）</div>
-      <div class="info-row"><span class="info-label">✨ おいしさの秘密</span>潮流の激しい海域で育ったため、身が引き締まり脂の乗りが抜群。船上で素早く「活〆処理」を行っているため、鮮度と旨味が最大限に引き出されています！</div>
-      <div class="action-button-container">
-        <button class="action-btn" id="dishes-btn">この魚の料理</button>
-        <button class="action-btn" id="see-actual-btn">実際に見る</button>
-      </div>
-      <button class="close-btn" id="close-info-btn">閉じる</button>
-    </div>
+    // 3. 速度の更新
+    velocity.add(acceleration);
+    velocity.clampLength(0.005, 0.012); 
+    obj.position.add(velocity);
+    acceleration.set(0, 0, 0); 
 
-    <div id="ar-scene-container">
-      <a-scene 
-        id="sceneEl" embedded 
-        renderer="alpha: true; colorManagement: true; precision: high; antialias: true;"
-        vr-mode-ui="enabled: false"
-        cursor="rayOrigin: mouse; fuse: false;"
-        raycaster="objects: .clickable">
-        
-        <a-assets>
-          <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
-        </a-assets>
+    // ----------------------------------------------------
+    // 4. 自然な姿勢（向き）の計算
+    // ----------------------------------------------------
+    // (A) 左右の向き（Yaw）
+    let yaw = Math.atan2(velocity.x, velocity.z);
 
-        <!-- 💡 修正: カメラの中に料理を入れることで、常に画面の真ん中に表示されます -->
-        <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;">
-          <!-- 料理のモデル -->
-          <a-entity id="dishes-space" visible="false" position="0 -0.1 -1.5">
-            <!-- 仮のお皿と仮のお寿司 -->
-            <a-cylinder radius="0.3" height="0.02" color="white"></a-cylinder>
-            <a-box width="0.1" height="0.05" depth="0.2" color="red" position="0 0.03 0"></a-box>
-          </a-entity>
-        </a-entity>
+    // (B) 上下の向き（Pitch）：傾きすぎないように±15度以内に制限！
+    const speedXZ = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+    let pitch = Math.atan2(-velocity.y, speedXZ);
+    const maxPitch = THREE.MathUtils.degToRad(15); // 最大15度
+    pitch = THREE.MathUtils.clamp(pitch, -maxPitch, maxPitch);
 
-        <!-- タイ（こちらは空間を泳ぐのでカメラの外のまま） -->
-        <a-entity 
-          id="my-fish" 
-          class="clickable"
-          tap-action="action: show-card"
-          gltf-model="#fish-model" 
-          scale="0.12 0.12 0.12" 
-          position="0 0 -2"
-          animation-mixer
-          visible="true">
-          <!-- 当たり判定 -->
-          <a-sphere class="clickable" radius="15" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
-        </a-entity>
+    // (C) 魚の「ゆらゆら」とした自然な泳ぎ（Sin波）
+    const wiggle = Math.sin(swimTime) * 0.05;
 
-        <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
-        <a-entity light="type: directional; intensity: 0.8;" position="1 2 1"></a-entity>
-      </a-scene>
-    </div>
+    // (D) 3Dモデルの向き補正（元々のモデルの向きに合わせた90度オフセット）
+    const modelOffset = Math.PI / 2;
 
-    <script>
-      const startBtn = document.getElementById('start-btn');
-      const startScreen = document.getElementById('start-screen');
-      const webcam = document.getElementById('webcam-bg');
-      const fish = document.querySelector('#my-fish');
-      const infoCard = document.getElementById('fish-info-card');
-      const closeInfoBtn = document.getElementById('close-info-btn');
-      const instructions = document.getElementById('instructions');
-      
-      const dishesBtn = document.getElementById('dishes-btn');
-      const seeActualBtn = document.getElementById('see-actual-btn');
-      const dishesSpace = document.getElementById('dishes-space');
+    // Roll（Z軸＝お腹の傾き）を「0」に固定して回転を適用
+    dummy.rotation.set(pitch, yaw + modelOffset + wiggle, 0, 'YXZ');
 
-      // 💡 追加: 下のコメント（案内）をタップした時の動作
-      instructions.addEventListener('click', () => {
-        // 情報カードを表示
-        infoCard.style.display = 'block';
-        // コメント自身を消す
-        instructions.style.display = 'none';
-        // 料理を消して魚を戻す
-        dishesSpace.setAttribute('visible', false);
-        fish.setAttribute('visible', true);
-      });
-
-      // 閉じるボタン
-      closeInfoBtn.addEventListener('click', () => {
-        infoCard.style.display = 'none';
-      });
-      
-      // 「この魚の料理」ボタン
-      dishesBtn.addEventListener('click', () => {
-        infoCard.style.display = 'none';
-        fish.setAttribute('visible', false); 
-        dishesSpace.setAttribute('visible', true); 
-        instructions.innerText = "この魚を使った料理が登場！\n（タップして情報画面に戻る）";
-        instructions.style.display = 'block';
-      });
-
-      // 「実際に見る」ボタン
-      seeActualBtn.addEventListener('click', () => {
-        infoCard.style.display = 'none';
-        instructions.innerText = "ただいま、おかもちをお持ちいたします。\n（タップして情報画面に戻る）";
-        instructions.style.display = 'block';
-        setTimeout(() => {
-          instructions.style.display = 'none';
-        }, 8000);
-      });
-
-      // 画質向上スクリプト
-      fish.addEventListener('model-loaded', () => {
-        const mesh = fish.getObject3D('mesh');
-        if (mesh) {
-          mesh.traverse((node) => {
-            if (node.isMesh) {
-              node.material.side = THREE.DoubleSide; node.material.transparent = false; node.material.depthWrite = true;
-            }
-          });
-        }
-      });
-
-      // 自律遊泳アルゴリズム
-      const velocity = new THREE.Vector3(0, 0, -0.01); 
-      const acceleration = new THREE.Vector3();
-      const dummy = new THREE.Object3D(); 
-
-      function animate() {
-        requestAnimationFrame(animate);
-        if (fish && fish.object3D && fish.object3D.visible) {
-          const obj = fish.object3D;
-          const wanderX = (Math.random() - 0.5) * 0.0006;
-          const wanderY = (Math.random() - 0.5) * 0.0003; 
-          const wanderZ = (Math.random() - 0.5) * 0.0006;
-          acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
-
-          const dist = obj.position.length();
-          if (dist > 3.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
-          else if (dist < 1.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
-
-          if (obj.position.y > 0.8) acceleration.y -= 0.0003;
-          else if (obj.position.y < -0.8) acceleration.y += 0.0003;
-
-          velocity.add(acceleration);
-          velocity.clampLength(0.005, 0.012); 
-          obj.position.add(velocity);
-          acceleration.set(0, 0, 0); 
-
-          const targetPos = obj.position.clone().add(velocity);
-          dummy.position.copy(obj.position);
-          dummy.lookAt(targetPos);
-          dummy.rotateY(Math.PI / 2); 
-          obj.quaternion.slerp(dummy.quaternion, 0.02);
-        }
-      }
-      animate();
-
-      // カメラ起動
-      startBtn.addEventListener('click', async () => {
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-          try {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') { alert('センサーの使用が拒否されました。'); return; }
-          } catch (error) { console.error(error); }
-        }
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-          webcam.srcObject = stream;
-        } catch (error) { alert('カメラへのアクセスが拒否されました。'); return; }
-        startScreen.style.display = 'none';
-      });
-    </script>
-  </body>
-</html>
+    // 滑らかに向きを追従させる（slerp）
+    obj.quaternion.slerp(dummy.quaternion, 0.04);
+  }
+}
+animate();
