@@ -34,13 +34,13 @@
       @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
 
       .tab-menu { display: flex; border-bottom: 2px solid #edf2f7; margin-bottom: 12px; }
-      .tab-btn { flex: 1; padding: 10px 0; background: none; border: none; font-size: 13px; font-weight: bold; color: #a0aec0; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+      .tab-btn { flex: 1; padding: 8px 2px; background: none; border: none; font-size: 11px; font-weight: bold; color: #a0aec0; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; text-align: center; }
       .tab-btn.active { color: #0088ff; border-bottom-color: #0088ff; }
 
       .tab-content { display: none; max-height: 320px; overflow-y: auto; padding-right: 4px; }
       .tab-content.active { display: block; }
 
-      .fish-img { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
+      .fish-img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
       .info-header { font-size: 18px; font-weight: bold; color: #002b49; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
       .info-row { margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #4a5568; }
       .info-label { font-weight: bold; color: #0088ff; display: block; font-size: 11px; margin-bottom: 2px; }
@@ -83,21 +83,31 @@
     <!-- 案内表示 -->
     <div id="instructions"></div>
 
-    <!-- 魚の詳細情報カード（完成版） -->
+    <!-- 魚の詳細情報カード（3タブ仕様） -->
     <div id="fish-info-card">
       
-      <!-- タブボタン -->
+      <!-- 3つのタブボタン -->
       <div class="tab-menu">
-        <button class="tab-btn active" id="btn-tab-basic">📌 基本情報 & ストーリー</button>
-        <button class="tab-btn" id="btn-tab-story">💡 美味しさの秘密</button>
+        <button class="tab-btn active" id="btn-tab-basic">📌 基本情報</button>
+        <button class="tab-btn" id="btn-tab-producer">👨‍🌾 生産者について</button>
+        <button class="tab-btn" id="btn-tab-story">💡 おいしさの秘密</button>
       </div>
 
-      <!-- タブ1: 基本情報 & リアルタイムタイムライン -->
+      <!-- タブ1: 基本情報 -->
       <div id="tab-basic" class="tab-content active">
-        <img src="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?auto=format&fit=crop&w=600&q=80" alt="真鯛" class="fish-img">
+        <!-- 横向きの真鯛の写真 -->
+        <img src="https://images.unsplash.com/photo-1534483509719-3feaee7c30da?auto=format&fit=crop&w=600&q=80" alt="横からみた真鯛" class="fish-img">
         <div class="info-header">
           <span>🐟 豊浜産 活〆真鯛</span>
         </div>
+        <div class="info-row"><span class="info-label">📍 漁獲地</span>愛知県 南知多 豊浜漁港</div>
+        <div class="info-row"><span class="info-label">🌊 状態</span>本日水揚げ・船上活〆（超鮮度）</div>
+        <div class="info-row"><span class="info-label">🍽️ 味わいの特徴</span>激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み</div>
+      </div>
+
+      <!-- タブ2: 生産者について -->
+      <div id="tab-producer" class="tab-content">
+        <div class="info-row"><span class="info-label">👨‍🌾 生産者・漁船</span>第十八 豊漁丸（漁師・鈴木 健太郎さん）</div>
 
         <div class="quote-box">
           💬 <strong>漁師・鈴木さんの一言</strong><br>
@@ -109,16 +119,12 @@
           <div class="timeline-title">⏱️ 産地直送ライブ・タイムライン</div>
           <div class="timeline-item"><span class="timeline-time">【06:00】</span> 豊浜沖にて水揚げ・船上神経締め</div>
           <div class="timeline-item"><span class="timeline-time">【08:00】</span> 漁港からお店へダイレクト発送</div>
-          <div class="timeline-item"><span class="timeline-time" id="current-time-label">【現在】</span> お客様のテーブルへ到着！✨</div>
+          <div class="timeline-item"><span class="timeline-time" id="current-time-label">【--:--】</span> お客様のテーブルへ到着！✨</div>
         </div>
-
-        <div class="info-row"><span class="info-label">📍 漁獲地</span>愛知県 南知多 豊浜漁港</div>
-        <div class="info-row"><span class="info-label">👨‍🌾 生産者・漁船</span>第十八 豊漁丸（漁師・鈴木 健太郎さん）</div>
       </div>
 
-      <!-- タブ2: 美味しさの秘密（神経締め図解＆六次産業） -->
+      <!-- タブ3: おいしさの秘密 -->
       <div id="tab-story" class="tab-content">
-        
         <div class="info-label" style="font-size: 13px;">⚡ ① 0.1秒の職人技「船上・神経締め」</div>
         <p style="font-size: 12px; line-height: 1.4; color: #4a5568; margin-top: 4px;">
           「船の上で暴れさせない。それが旨味を守る秘訣だ。」
@@ -199,32 +205,36 @@
       const seeActualBtn = document.getElementById('see-actual-btn');
       const dishesSpace = document.getElementById('dishes-space');
 
-      // タブ切り替え処理
+      // 3タブの切り替え処理
       const btnTabBasic = document.getElementById('btn-tab-basic');
+      const btnTabProducer = document.getElementById('btn-tab-producer');
       const btnTabStory = document.getElementById('btn-tab-story');
+      
       const tabBasic = document.getElementById('tab-basic');
+      const tabProducer = document.getElementById('tab-producer');
       const tabStory = document.getElementById('tab-story');
 
-      btnTabBasic.addEventListener('click', () => {
-        btnTabBasic.classList.add('active');
-        btnTabStory.classList.remove('active');
-        tabBasic.classList.add('active');
-        tabStory.classList.remove('active');
-      });
+      function switchTab(activeBtn, activeContent) {
+        [btnTabBasic, btnTabProducer, btnTabStory].forEach(btn => btn.classList.remove('active'));
+        [tabBasic, tabProducer, tabStory].forEach(tab => tab.classList.remove('active'));
+        activeBtn.classList.add('active');
+        activeContent.classList.add('active');
+      }
 
-      btnTabStory.addEventListener('click', () => {
-        btnTabStory.classList.add('active');
-        btnTabBasic.classList.remove('active');
-        tabStory.classList.add('active');
-        tabBasic.classList.remove('active');
-      });
+      btnTabBasic.addEventListener('click', () => switchTab(btnTabBasic, tabBasic));
+      btnTabProducer.addEventListener('click', () => switchTab(btnTabProducer, tabProducer));
+      btnTabStory.addEventListener('click', () => switchTab(btnTabStory, tabStory));
 
-      // カードを開いたときに現在時刻をタイムラインに自動セットする関数
+      // カードを開いたときに日本時間（JST）の現在時刻を取得して反映
       function openFishCard() {
         const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('current-time-label').innerText = `【${hours}:${minutes}】`;
+        const jstTimeString = now.toLocaleTimeString('ja-JP', {
+          timeZone: 'Asia/Tokyo',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        document.getElementById('current-time-label').innerText = `【${jstTimeString}】`;
         infoCard.style.display = 'block';
       }
 
