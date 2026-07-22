@@ -39,12 +39,12 @@
                     node.material.map = loadedTexture;
                   }
                   
-                  // 本来の色とコントラストを維持（白飛び・退色を完全防除）
+                  // 本来の色とコントラストを維持
                   if (node.material.color) node.material.color.setHex(0xffffff);
-                  if (node.material.emissive) node.material.emissive.setHex(0x000000); // 発光をカットして濃い色を保持
+                  if (node.material.emissive) node.material.emissive.setHex(0x000000);
 
-                  // 面の欠け（透過バグ）のみを強力補正
-                  node.material.side = THREE.DoubleSide; // 両面描画で透けを防止
+                  // 面の欠け（透過バグ）防止
+                  node.material.side = THREE.DoubleSide;
                   node.material.transparent = false;
                   node.material.opacity = 1.0;
                   node.material.depthWrite = true;
@@ -313,7 +313,7 @@
         <!-- 魚が生成されるコンテナ -->
         <a-entity id="fishes-container"></a-entity>
 
-        <!-- 自然で鮮やかなライティング強度（復元） -->
+        <!-- 自然で鮮やかなライティング強度 -->
         <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
         <a-entity light="type: directional; intensity: 0.8;" position="1 2 1"></a-entity>
       </a-scene>
@@ -353,7 +353,7 @@
           status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
           desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
           img: 'tuna.png',
-          baseScale: 2.5,                // マグロのサイズ
+          baseScale: 3.75,               // マグロのサイズ (2.5 -> 3.75に1.5倍拡大)
           hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '勝浦港 幸栄丸\n山本 勝 さん',
@@ -374,7 +374,7 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
           img: 'huetai.png',
-          baseScale: 1.8,                // フエダイのスケール
+          baseScale: 2.7,                // フエダイのスケール (1.8 -> 2.7に1.5倍拡大)
           hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '吹上浜 恵丸\n川口 毅 さん',
