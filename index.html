@@ -204,17 +204,6 @@
           <img src="rokuji.png" alt="六次産業化の図解">
           <span class="step-badge" style="background: #dd6b20;">2. 六次産業化（市場スキップ）</span>
         </div>
-
-        <div style="background: #fffaf0; padding: 8px; border-radius: 8px; border-left: 4px solid #dd6b20; margin-bottom: 6px;">
-          <div style="font-size: 11px; font-weight: bold; color: #7b341e; margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between;">
-            <span>🚚 漁場からお店へダイレクト直送</span>
-            <span style="font-size: 8px; background: #ed8936; color: white; padding: 1px 5px; border-radius: 6px;">直通配送</span>
-          </div>
-          <div style="font-size: 9.5px; color: #4a5568; line-height: 1.4;">
-            【1次：漁獲】×【2次：加工/神経締め】×【3次：直営店舗販売】<br>
-            中間流通（市場）をスキップし、漁場からお店へダイレクト直送。最高の状態でお手頃価格で提供します。
-          </div>
-        </div>
       </div>
 
       <div class="action-button-container">
@@ -279,7 +268,7 @@
       <div style="font-size: 15px; font-weight: bold; color: #002b49; margin-bottom: 4px;">ご注文を承りました！</div>
       <div id="ordered-item-name" style="font-size: 12.5px; font-weight: bold; color: #e53e3e; margin-bottom: 8px;">料理名</div>
       <p style="font-size: 10.5px; color: #718096; line-height: 1.4; margin-bottom: 12px;">
-        スタッフがお席まで確認にお伺いいたします。<br>出来上がりまで楽しみにお待ちください！
+        スタッフがお席まで確認にお伺いいたします。<br>出来上がりまで楽しみにお待ください！
       </p>
       <button class="action-btn" id="close-order-modal-btn" style="width: 100%;">閉じる</button>
     </div>
@@ -365,8 +354,8 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
           img: 'huetai.png',
-          baseScale: 0.12,               // フエダイのスケール
-          hitBox: { w: 12, h: 7, d: 5 }, // フエダイ用タップ判定ボックスサイズ
+          baseScale: 0.8,                // フエダイのスケール（大きめに調整）
+          hitBox: { w: 10, h: 6, d: 4 }, // フエダイ用タップ判定ボックスサイズ
           producer: {
             name: '吹上浜 恵丸\n川口 毅 さん',
             img: 'ryoushi.png',
