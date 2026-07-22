@@ -7,21 +7,18 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
-    <!-- ARタップ検知 & 透過・高解像度修正システム -->
+    <!-- ARタップ検知 & 透過補正システム -->
     <script>
       AFRAME.registerComponent('tap-action', {
-        schema: { action: { type: 'string' } },
+        schema: { speciesIndex: { type: 'int', default: 0 } },
         init: function () {
           this.el.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (this.data.action === 'show-card') {
-              openFishCard();
-            }
+            openFishCard(this.data.speciesIndex);
           });
         }
       });
 
-      // 3D魚モデルの透けを防止し、くっきり表示させる補正コンポーネント
       AFRAME.registerComponent('fix-fish-material', {
         init: function () {
           this.el.addEventListener('model-loaded', () => {
@@ -50,7 +47,7 @@
       #start-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white; padding: 20px; box-sizing: border-box; }
       #start-btn { padding: 15px 40px; font-size: 18px; background: #00a2ff; color: white; border: none; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,162,255,0.5); cursor: pointer; }
       
-      /* --- ポップアップ共通スタイル（レスポンシブ対応） --- */
+      /* --- ポップアップ共通スタイル --- */
       .popup-card { 
         display: none; 
         position: absolute; 
@@ -72,7 +69,6 @@
       }
       @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
 
-      /* タブデザイン */
       .tab-menu { display: flex; border-bottom: 2px solid #edf2f7; margin-bottom: 10px; }
       .tab-btn { flex: 1; padding: 8px 2px; background: none; border: none; font-size: 11px; font-weight: bold; color: #a0aec0; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; text-align: center; }
       .tab-btn.active { color: #0088ff; border-bottom-color: #0088ff; }
@@ -81,16 +77,12 @@
       .tab-content.active { display: block; }
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
-      
-      /* 岡持画像の専用スタイル */
       .okamochi-img { width: 100%; height: auto; max-height: 220px; object-fit: contain; border-radius: 10px; margin-bottom: 10px; background-color: #f7fafc; }
 
-      /* インパクト画像スタイル */
       .single-story-card { position: relative; height: 130px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #0f172a; display: flex; align-items: center; justify-content: center; }
       .single-story-card img { width: 100%; height: 100%; object-fit: contain; display: block; }
       .single-story-card .step-badge { position: absolute; top: 8px; left: 8px; background: #e53e3e; color: white; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 2; }
 
-      /* 生産者プロフィールのレイアウト */
       .producer-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; background: #f7fafc; padding: 8px 12px; border-radius: 12px; border: 1px solid #e2e8f0; }
       .producer-img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0088ff; background-color: #edf2f7; flex-shrink: 0; }
       .producer-info { font-size: 11.5px; color: #2d3748; }
@@ -99,33 +91,25 @@
       .info-row { margin-bottom: 6px; font-size: 11.5px; line-height: 1.4; color: #4a5568; }
       .info-label { font-weight: bold; color: #0088ff; display: block; font-size: 10.5px; margin-bottom: 1px; }
 
-      /* 生産者の想い吹き出し */
       .quote-box { background: #f0f7ff; border-left: 4px solid #0088ff; padding: 8px; border-radius: 6px; font-size: 11px; color: #2d3748; margin-bottom: 10px; line-height: 1.4; }
       
-      /* タイムラインデザイン */
       .timeline { background: #faf5ff; border: 1px solid #e9d8fd; padding: 8px; border-radius: 8px; margin-bottom: 10px; }
       .timeline-title { font-size: 10.5px; font-weight: bold; color: #6b46c1; margin-bottom: 4px; }
       .timeline-item { font-size: 10px; color: #4a5568; display: flex; align-items: center; margin-bottom: 3px; }
       .timeline-time { font-weight: bold; color: #805ad5; width: 70px; display: inline-block; font-family: monospace; }
 
-      /* 下部ボタン */
       .action-button-container { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
       .action-btn { flex: 1; padding: 10px; background: #00a2ff; color: white; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 11px; box-shadow: 0 4px 10px rgba(0,162,255,0.3); }
       .close-btn { display: block; width: 100%; padding: 9px; margin-top: 8px; background: #e2e8f0; color: #4a5568; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 11.5px; }
       
-      /* 料理選択タブ */
       .dish-tab-menu { display: flex; gap: 6px; margin-bottom: 10px; }
       .dish-tab-btn { flex: 1; padding: 7px 2px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 10.5px; font-weight: bold; color: #64748b; cursor: pointer; text-align: center; transition: all 0.2s; }
       .dish-tab-btn.active { background: #002b49; color: white; border-color: #002b49; box-shadow: 0 2px 6px rgba(0,43,73,0.3); }
 
-      /* 注文確定ボタン */
       .order-btn { display: block; width: 100%; padding: 12px; margin-top: 8px; background: linear-gradient(135deg, #e53e3e, #dd6b20); color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; font-size: 13.5px; box-shadow: 0 4px 12px rgba(229,62,62,0.4); }
-      .order-btn:active { transform: scale(0.98); }
 
-      /* 注文完了モーダル */
       #order-confirm-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 320px; background: white; border-radius: 16px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); z-index: 10001; text-align: center; }
 
-      /* 🔄 スマホ横持ち専用スタイル */
       @media (orientation: landscape) and (max-height: 550px) {
         .popup-card { max-width: 580px; padding: 12px 16px; }
         .tab-content { max-height: 52vh; }
@@ -162,15 +146,15 @@
       <div id="tab-basic" class="tab-content active">
         <div class="landscape-split">
           <div class="landscape-media">
-            <img src="tai.png" alt="真鯛" class="fish-img">
+            <img id="card-fish-img" src="tai.png" alt="魚画像" class="fish-img">
           </div>
           <div class="landscape-body">
             <div class="info-header">
-              <span>🐟 日向産 活〆真鯛</span>
+              <span id="card-fish-title">🐟 日向産 活〆真鯛</span>
             </div>
-            <div class="info-row"><span class="info-label">📍 漁獲地</span>福井県 美浜町 日向漁港</div>
-            <div class="info-row"><span class="info-label">🌊 状態</span>本日水揚げ・船上活〆（超鮮度）</div>
-            <div class="info-row"><span class="info-label">🍽️ 味わいの特徴</span>激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み</div>
+            <div class="info-row"><span class="info-label">📍 漁獲地</span><span id="card-fish-origin">福井県 美浜町 日向漁港</span></div>
+            <div class="info-row"><span class="info-label">🌊 状態</span><span id="card-fish-status">本日水揚げ・船上活〆（超鮮度）</span></div>
+            <div class="info-row"><span class="info-label">🍽️ 味わいの特徴</span><span id="card-fish-desc">激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み</span></div>
           </div>
         </div>
       </div>
@@ -178,21 +162,21 @@
       <!-- タブ2: 生産者について -->
       <div id="tab-producer" class="tab-content">
         <div class="producer-profile">
-          <img src="ryoushi.png" alt="生産者・鈴木さん" class="producer-img">
+          <img id="card-producer-img" src="ryoushi.png" alt="生産者" class="producer-img">
           <div class="producer-info">
             <span class="info-label">👨‍🌾 漁師・船元</span>
-            <strong style="font-size: 12.5px; color: #002b49;">第十八 豊漁丸<br>鈴木 健太郎 さん</strong>
+            <strong id="card-producer-name" style="font-size: 12.5px; color: #002b49;">第十八 豊漁丸<br>鈴木 健太郎 さん</strong>
           </div>
         </div>
 
         <div class="quote-box">
-          💬 <strong>鈴木さんの一言</strong><br>
-          「今朝3時、最高の鯛が揚がったよ！船の上ですぐに完璧な仕込みをして送ったから、とびきりの鮮度をしっかり味わってね！」
+          💬 <strong>生産者の一言</strong><br>
+          <span id="card-producer-quote">「今朝3時、最高の魚が揚がったよ！船の上ですぐに完璧な仕込みをして送ったから、とびきりの鮮度を味わってね！」</span>
         </div>
 
         <div class="timeline">
           <div class="timeline-title">⏱️ 産地直送ライブ・タイムライン</div>
-          <div class="timeline-item"><span class="timeline-time">【03:00:00】</span> 日向沖にて水揚げ・船上神経締め</div>
+          <div class="timeline-item"><span class="timeline-time">【03:00:00】</span> 沖合にて水揚げ・船上処理</div>
           <div class="timeline-item"><span class="timeline-time">【06:00:00】</span> 漁港からお店へダイレクト発送</div>
           <div class="timeline-item"><span class="timeline-time" id="current-time-label">【00:00:00】</span> お客様のテーブルへ到着！✨</div>
         </div>
@@ -210,7 +194,7 @@
             ⚡ 死後硬直を「24時間」遅らせる
           </div>
           <div style="font-size: 9.5px; color: #4a5568; line-height: 1.4;">
-            船上で1匹ずつ手作業で神経締めを行い、魚のストレスをゼロに。獲れたて特有の歯ごたえと旨味を極限キープ！
+            船上で1匹ずつ手作業で仕込みを行い、魚のストレスをゼロに。獲れたて特有の歯ごたえと旨味を極限キープ！
           </div>
         </div>
 
@@ -220,15 +204,7 @@
             <span style="font-size: 8px; background: #ed8936; color: white; padding: 1px 5px; border-radius: 6px;">直通配送</span>
           </div>
           <div style="font-size: 9.5px; color: #4a5568; line-height: 1.4; margin-bottom: 5px;">
-            市場を通さず漁場からお店へダイレクト輸送。中間コストをカットし、最高の状態をお手頃価格で提供します。
-          </div>
-
-          <div style="display: flex; align-items: center; justify-content: space-around; background: rgba(237, 137, 54, 0.12); padding: 4px 2px; border-radius: 6px; font-size: 8.5px; color: #7b341e; font-weight: bold;">
-            <span>⚓ 漁場・船元</span>
-            <span style="color: #ed8936;">➔</span>
-            <span style="color: #a0aec0; text-decoration: line-through; font-weight: normal; font-size: 7.5px;">卸売市場</span>
-            <span style="color: #ed8936;">➔</span>
-            <span>🍽️ 当店直通</span>
+            中間流通をスキップし、漁場からお店へダイレクト直送。最高の状態でお手頃価格で提供します。
           </div>
         </div>
       </div>
@@ -243,15 +219,11 @@
     <!-- 2. 料理選び & 注文ポップアップ -->
     <div id="dish-card" class="popup-card">
       <div style="font-size: 15px; font-weight: bold; color: #002b49; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-        <span>🍽️ 本日の真鯛料理</span>
+        <span>🍽️ 本日の魚料理</span>
         <span style="font-size: 10px; background: #e6fffa; color: #234e52; padding: 2px 7px; border-radius: 10px; border: 1px solid #b2f5ea;">本日のおすすめ</span>
       </div>
 
-      <div class="dish-tab-menu">
-        <button class="dish-tab-btn active" onclick="selectDish(0)">✨ 刺盛</button>
-        <button class="dish-tab-btn" onclick="selectDish(1)">🔥 カマ塩焼き</button>
-        <button class="dish-tab-btn" onclick="selectDish(2)">🍲 兜煮</button>
-      </div>
+      <div class="dish-tab-menu" id="dish-tab-container"></div>
 
       <div id="dish-display" class="landscape-split">
         <div class="landscape-media">
@@ -259,15 +231,13 @@
         </div>
         <div class="landscape-body">
           <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
-            <strong id="dish-title" style="font-size: 14px; color: #002b49;">日向産 活〆真鯛の刺身盛り</strong>
-            <span id="dish-price" style="font-size: 15px; font-weight: bold; color: #e53e3e;">1,480円<span style="font-size: 9.5px; color: #718096; font-weight: normal;">(税込)</span></span>
+            <strong id="dish-title" style="font-size: 13.5px; color: #002b49;">料理名</strong>
+            <span id="dish-price" style="font-size: 15px; font-weight: bold; color: #e53e3e;">0円</span>
           </div>
-          <p id="dish-desc" style="font-size: 10.5px; color: #4a5568; line-height: 1.4; margin: 0 0 6px 0;">
-            船上神経締めならではのコリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！
-          </p>
+          <p id="dish-desc" style="font-size: 10.5px; color: #4a5568; line-height: 1.4; margin: 0 0 6px 0;">説明文</p>
           
           <div style="background: #f7fafc; padding: 5px 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 10px; color: #2d3748; margin-bottom: 6px;">
-            🍶 <strong>相性抜群のお酒：</strong> <span id="dish-sake" style="color: #0088ff; font-weight: bold;">日向の地酒 純米吟醸</span>
+            🍶 <strong>相性抜群のお酒：</strong> <span id="dish-sake" style="color: #0088ff; font-weight: bold;">お酒名</span>
           </div>
         </div>
       </div>
@@ -276,7 +246,7 @@
       <button class="close-btn" id="back-to-fish-btn">魚の画面に戻る</button>
     </div>
 
-    <!-- 3. 岡持（実物）案内ポップアップ -->
+    <!-- 3. 岡持案内ポップアップ -->
     <div id="okamochi-card" class="popup-card">
       <div style="font-size: 15px; font-weight: bold; color: #002b49; margin-bottom: 8px; text-align: center;">
         🐟 実物をお持ちいたします！
@@ -288,18 +258,18 @@
         </div>
         <div class="landscape-body" style="text-align: center;">
           <p style="font-size: 11px; color: #4a5568; line-height: 1.5; margin: 4px 0 10px 0;">
-            ただいま、スタッフが岡持（おかもち）に入れた本日の真鯛をお席までお持ちいたします！
+            ただいま、スタッフが岡持（おかもち）に入れた本日の鮮魚をお席までお持ちいたします！
           </p>
           <button class="action-btn" id="close-okamochi-btn" style="width: 100%;">魚の詳細に戻る</button>
         </div>
       </div>
     </div>
 
-    <!-- 4. 注文完了通知ポップアップ -->
+    <!-- 4. 注文完了モーダル -->
     <div id="order-confirm-modal">
       <div style="font-size: 32px; margin-bottom: 6px;">🎉</div>
       <div style="font-size: 15px; font-weight: bold; color: #002b49; margin-bottom: 4px;">ご注文を承りました！</div>
-      <div id="ordered-item-name" style="font-size: 12.5px; font-weight: bold; color: #e53e3e; margin-bottom: 8px;">日向産 活〆真鯛の刺身盛り</div>
+      <div id="ordered-item-name" style="font-size: 12.5px; font-weight: bold; color: #e53e3e; margin-bottom: 8px;">料理名</div>
       <p style="font-size: 10.5px; color: #718096; line-height: 1.4; margin-bottom: 12px;">
         スタッフがお席まで確認にお伺いいたします。<br>出来上がりまで楽しみにお待ちください！
       </p>
@@ -316,13 +286,14 @@
         raycaster="objects: .clickable">
         
         <a-assets>
-          <a-asset-item id="fish-model" src="tai.glb"></a-asset-item>
+          <!-- 真鯛とマグロのアニメーション3Dモデル -->
+          <a-asset-item id="tai-model" src="tai.glb"></a-asset-item>
+          <a-asset-item id="tuna-model" src="tuna.glb"></a-asset-item>
         </a-assets>
 
-        <!-- カメラ -->
         <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
 
-        <!-- 複数匹の魚が生成される親コンテナ -->
+        <!-- 魚が生成されるコンテナ -->
         <a-entity id="fishes-container"></a-entity>
 
         <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
@@ -331,59 +302,85 @@
     </div>
 
     <script>
-      const startBtn = document.getElementById('start-btn');
-      const startScreen = document.getElementById('start-screen');
-      const webcam = document.getElementById('webcam-bg');
-      
-      const fishInfoCard = document.getElementById('fish-info-card');
-      const dishCard = document.getElementById('dish-card');
-      const okamochiCard = document.getElementById('okamochi-card');
-      const orderConfirmModal = document.getElementById('order-confirm-modal');
-
-      const dishesBtn = document.getElementById('dishes-btn');
-      const seeActualBtn = document.getElementById('see-actual-btn');
-      const closeInfoBtn = document.getElementById('close-info-btn');
-      const backToFishBtn = document.getElementById('back-to-fish-btn');
-      const closeOkamochiBtn = document.getElementById('close-okamochi-btn');
-      const orderSubmitBtn = document.getElementById('order-submit-btn');
-      const closeOrderModalBtn = document.getElementById('close-order-modal-btn');
-
-      // 画面の解像度（高画素密度）対応
-      document.querySelector('a-scene').addEventListener('loaded', function () {
-        if (this.renderer) {
-          this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      // -------------------------------------------------------------
+      // 🐟 魚種マスターデータ（真鯛 & マグロ）
+      // -------------------------------------------------------------
+      const SPECIES_DATA = [
+        {
+          id: 'tai',
+          modelId: '#tai-model',
+          title: '🐟 日向産 活〆真鯛',
+          origin: '福井県 美浜町 日向漁港',
+          status: '本日水揚げ・船上活〆（超鮮度）',
+          desc: '激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み。',
+          img: 'tai.png',
+          baseScale: 0.11, // 真鯛の基本サイズ
+          producer: {
+            name: '第十八 豊漁丸\n鈴木 健太郎 さん',
+            img: 'ryoushi.png',
+            quote: '今朝3時、最高の真鯛が揚がったよ！船の上ですぐに神経締めしたから鮮度抜群だよ！'
+          },
+          dishes: [
+            { title: "日向産 活〆真鯛の刺身盛り", price: "1,480円", desc: "コリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！", sake: "日向の地酒 純米吟醸", img: "sashimi.png" },
+            { title: "活〆真鯛のカマ塩焼き", price: "880円", desc: "一匹から2つしか取れない希少部位。ジューシーな脂と香ばしい皮目が絶品！", sake: "特別純米酒（芳醇旨口）", img: "kamashio.png" },
+            { title: "活〆真鯛の兜煮", price: "980円", desc: "旨味が凝縮された頭部を甘辛タレでじっくり炊き上げました。", sake: "本醸造 熱燗", img: "kabutoni.png" }
+          ]
+        },
+        {
+          id: 'tuna',
+          modelId: '#tuna-model',
+          title: '🐟 勝浦産 活〆生本マグロ',
+          origin: '和歌山県 勝浦漁港',
+          status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
+          desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
+          img: 'tuna.png',
+          baseScale: 0.15, // マグロは少し大きめに設定
+          producer: {
+            name: '勝浦港 幸栄丸\n山本 勝 さん',
+            img: 'ryoushi.png',
+            quote: '一度も凍らせていない生の極上本マグロだ！赤身のコクとトロの甘みを存分に味わってくれ！'
+          },
+          dishes: [
+            { title: "本マグロの極上赤身・中トロ刺身盛り", price: "1,880円", desc: "生のモチモチとした食感と深みのある旨み。赤身と中トロの食べ比べ！", sake: "黒龍 純米大吟醸", img: "sashimi.png" },
+            { title: "本マグロのねぎま串焼き", price: "980円", desc: "脂の乗ったマグロと香ばしい白ネギの絶妙なハーモニー！", sake: "特別純米酒", img: "kamashio.png" },
+            { title: "本マグロのレアかつ", price: "1,280円", desc: "外はサクサク、中はしっとりレア！わさび醤油でさっぱりとお召し上がりください。", sake: "純米スパークリング", img: "kabutoni.png" }
+          ]
         }
-      });
+      ];
+
+      // 画面内に配置する魚の組み合わせ（0: 真鯛, 1: マグロ）
+      // 例: 真鯛2匹 + マグロ2匹 の計4匹
+      const SPAWN_LIST = [0, 0, 1, 1];
 
       // -------------------------------------------------------------
-      // 🐟 魚の複数匹生成 & 泳ぎの管理ロジック
+      // AR生成 & アニメーション
       // -------------------------------------------------------------
-      const FISH_COUNT = 4; // 泳がせる魚の数（お好みに応じて変更可能です）
       const fishes = [];
       const dummy = new THREE.Object3D();
-
       const container = document.getElementById('fishes-container');
 
-      for (let i = 0; i < FISH_COUNT; i++) {
+      SPAWN_LIST.forEach((speciesIndex) => {
+        const species = SPECIES_DATA[speciesIndex] || SPECIES_DATA[0];
         const fishEntity = document.createElement('a-entity');
+        
         fishEntity.setAttribute('class', 'clickable');
-        fishEntity.setAttribute('tap-action', 'action: show-card');
+        fishEntity.setAttribute('tap-action', `speciesIndex: ${speciesIndex}`);
         fishEntity.setAttribute('fix-fish-material', '');
-        fishEntity.setAttribute('gltf-model', '#fish-model');
+        fishEntity.setAttribute('gltf-model', species.modelId);
         fishEntity.setAttribute('animation-mixer', '');
 
-        // 魚の大きさを少しだけランダム化（0.10〜0.13）
-        const scale = 0.10 + Math.random() * 0.03;
+        // 魚種別の基本サイズ ＋ 個体差ランダム調整
+        const scale = species.baseScale + (Math.random() - 0.5) * 0.02;
         fishEntity.setAttribute('scale', `${scale} ${scale} ${scale}`);
 
-        // タップ判定領域を追加
+        // タップ判定用の透明スフィア
         const sphere = document.createElement('a-sphere');
         sphere.setAttribute('class', 'clickable');
         sphere.setAttribute('radius', '15');
         sphere.setAttribute('material', 'visible: false');
         fishEntity.appendChild(sphere);
 
-        // 初期位置を分散して配置
+        // 初期位置の設定
         const posX = (Math.random() - 0.5) * 3;
         const posY = (Math.random() - 0.5) * 1.2;
         const posZ = -1.5 - Math.random() * 2;
@@ -391,36 +388,31 @@
 
         container.appendChild(fishEntity);
 
-        // 各魚の移動パラメータを保持
         fishes.push({
           entity: fishEntity,
           velocity: new THREE.Vector3((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.005, (Math.random() - 0.5) * 0.01),
           acceleration: new THREE.Vector3(),
-          swimTime: Math.random() * 100, // タイミングをバラバラにする
-          speedFactor: 0.8 + Math.random() * 0.5 // 泳ぐ速度の個体差
+          swimTime: Math.random() * 100,
+          speedFactor: 0.8 + Math.random() * 0.5
         });
-      }
+      });
 
       function animate() {
         requestAnimationFrame(animate);
-
         fishes.forEach((f) => {
           if (f.entity && f.entity.object3D && f.entity.object3D.visible) {
             const obj = f.entity.object3D;
             f.swimTime += 0.05 * f.speedFactor;
 
-            // ランダムな泳ぎの慣性
             const wanderX = (Math.random() - 0.5) * 0.0006;
             const wanderY = (Math.random() - 0.5) * 0.0002;
             const wanderZ = (Math.random() - 0.5) * 0.0006;
             f.acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
 
-            // カメラからの距離制限（離れすぎたら戻る）
             const dist = obj.position.length();
             if (dist > 3.5) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
             else if (dist < 1.0) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
 
-            // 高低差の制限
             if (obj.position.y > 0.8) f.acceleration.y -= 0.0003;
             else if (obj.position.y < -0.8) f.acceleration.y += 0.0003;
 
@@ -429,17 +421,13 @@
             obj.position.add(f.velocity);
             f.acceleration.set(0, 0, 0);
 
-            // 進行方向への旋回処理
             let yaw = Math.atan2(f.velocity.x, f.velocity.z);
             const speedXZ = Math.sqrt(f.velocity.x * f.velocity.x + f.velocity.z * f.velocity.z);
             let pitch = Math.atan2(-f.velocity.y, speedXZ);
-            const maxPitch = THREE.MathUtils.degToRad(15);
-            pitch = THREE.MathUtils.clamp(pitch, -maxPitch, maxPitch);
+            pitch = THREE.MathUtils.clamp(pitch, -THREE.MathUtils.degToRad(15), THREE.MathUtils.degToRad(15));
 
             const wiggle = Math.sin(f.swimTime) * 0.06;
-            const modelOffset = Math.PI / 2;
-
-            dummy.rotation.set(pitch, yaw + modelOffset + wiggle, 0, 'YXZ');
+            dummy.rotation.set(pitch, yaw + (Math.PI / 2) + wiggle, 0, 'YXZ');
             obj.quaternion.slerp(dummy.quaternion, 0.05);
           }
         });
@@ -447,41 +435,54 @@
       animate();
 
       // -------------------------------------------------------------
-      // UI / イベントハンドラ
+      // UI・画面データ同期ロジック
       // -------------------------------------------------------------
-      const dishesData = [
-        {
-          title: "日向産 活〆真鯛の刺身盛り",
-          price: "1,480円",
-          desc: "船上神経締めならではのコリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！",
-          sake: "日向の地酒 純米吟醸（淡麗辛口）",
-          img: "sashimi.png"
-        },
-        {
-          title: "日向産 活〆真鯛のカマ塩焼き",
-          price: "880円",
-          desc: "一匹から2つしか取れない希少部位。パリッとした皮目とジューシーな脂の乗った身が絶品！",
-          sake: "特別純米酒（コクのある芳醇旨口）",
-          img: "kamashio.png"
-        },
-        {
-          title: "日向産 活〆真鯛の兜煮（あら煮）",
-          price: "980円",
-          desc: "鯛の旨味が凝縮された頭部を、特製の甘辛タレでじっくり炊き上げました。お酒が進む味わい。",
-          sake: "本醸造 熱燗（まろやかな味わい）",
-          img: "kabutoni.png"
-        }
-      ];
-
+      let currentSpeciesIndex = 0;
       let selectedDishIndex = 0;
+
+      function openFishCard(speciesIndex) {
+        currentSpeciesIndex = speciesIndex;
+        const data = SPECIES_DATA[speciesIndex] || SPECIES_DATA[0];
+
+        document.getElementById('card-fish-title').innerText = data.title;
+        document.getElementById('card-fish-origin').innerText = data.origin;
+        document.getElementById('card-fish-status').innerText = data.status;
+        document.getElementById('card-fish-desc').innerText = data.desc;
+        document.getElementById('card-fish-img').src = data.img;
+
+        document.getElementById('card-producer-name').innerText = data.producer.name;
+        document.getElementById('card-producer-img').src = data.producer.img;
+        document.getElementById('card-producer-quote').innerText = `「${data.producer.quote}」`;
+
+        updateClock();
+        dishCard.style.display = 'none';
+        okamochiCard.style.display = 'none';
+        fishInfoCard.style.display = 'block';
+      }
+
+      function setupDishTabs() {
+        const data = SPECIES_DATA[currentSpeciesIndex];
+        const tabContainer = document.getElementById('dish-tab-container');
+        tabContainer.innerHTML = '';
+
+        data.dishes.forEach((dish, idx) => {
+          const btn = document.createElement('button');
+          btn.className = `dish-tab-btn ${idx === 0 ? 'active' : ''}`;
+          btn.innerText = dish.title.split(' ')[1] || dish.title.substring(0, 6);
+          btn.onclick = () => selectDish(idx);
+          tabContainer.appendChild(btn);
+        });
+
+        selectDish(0);
+      }
 
       function selectDish(index) {
         selectedDishIndex = index;
-        const data = dishesData[index];
-        
+        const data = SPECIES_DATA[currentSpeciesIndex].dishes[index];
+        if(!data) return;
+
         document.querySelectorAll('.dish-tab-btn').forEach((btn, i) => {
-          if(i === index) btn.classList.add('active');
-          else btn.classList.remove('active');
+          btn.classList.toggle('active', i === index);
         });
 
         document.getElementById('dish-title').innerText = data.title;
@@ -491,18 +492,36 @@
         document.getElementById('dish-img').src = data.img;
       }
 
-      // タブ切り替え
+      document.getElementById('dishes-btn').addEventListener('click', () => {
+        fishInfoCard.style.display = 'none';
+        setupDishTabs();
+        dishCard.style.display = 'block';
+      });
+
+      document.getElementById('close-info-btn').addEventListener('click', () => { fishInfoCard.style.display = 'none'; });
+      document.getElementById('back-to-fish-btn').addEventListener('click', () => { dishCard.style.display = 'none'; fishInfoCard.style.display = 'block'; });
+      document.getElementById('see-actual-btn').addEventListener('click', () => { fishInfoCard.style.display = 'none'; okamochiCard.style.display = 'block'; });
+      document.getElementById('close-okamochi-btn').addEventListener('click', () => { okamochiCard.style.display = 'none'; fishInfoCard.style.display = 'block'; });
+
+      document.getElementById('order-submit-btn').addEventListener('click', () => {
+        const dish = SPECIES_DATA[currentSpeciesIndex].dishes[selectedDishIndex];
+        document.getElementById('ordered-item-name').innerText = dish.title;
+        dishCard.style.display = 'none';
+        orderConfirmModal.style.display = 'block';
+      });
+
+      document.getElementById('close-order-modal-btn').addEventListener('click', () => { orderConfirmModal.style.display = 'none'; });
+
       const btnTabBasic = document.getElementById('btn-tab-basic');
       const btnTabProducer = document.getElementById('btn-tab-producer');
       const btnTabStory = document.getElementById('btn-tab-story');
-      
       const tabBasic = document.getElementById('tab-basic');
       const tabProducer = document.getElementById('tab-producer');
       const tabStory = document.getElementById('tab-story');
 
       function switchTab(activeBtn, activeContent) {
-        [btnTabBasic, btnTabProducer, btnTabStory].forEach(btn => btn.classList.remove('active'));
-        [tabBasic, tabProducer, tabStory].forEach(tab => tab.classList.remove('active'));
+        [btnTabBasic, btnTabProducer, btnTabStory].forEach(b => b.classList.remove('active'));
+        [tabBasic, tabProducer, tabStory].forEach(t => t.classList.remove('active'));
         activeBtn.classList.add('active');
         activeContent.classList.add('active');
       }
@@ -511,72 +530,23 @@
       btnTabProducer.addEventListener('click', () => switchTab(btnTabProducer, tabProducer));
       btnTabStory.addEventListener('click', () => switchTab(btnTabStory, tabStory));
 
-      // 時計の更新
       function updateClock() {
         const now = new Date();
-        const jstTimeString = now.toLocaleTimeString('ja-JP', {
-          timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-        });
+        const jstTimeString = now.toLocaleTimeString('ja-JP', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
         const clockEl = document.getElementById('current-time-label');
         if (clockEl) clockEl.innerText = `【${jstTimeString}】`;
       }
       setInterval(updateClock, 1000);
 
-      // 魚カードを開く
-      function openFishCard() {
-        updateClock();
-        dishCard.style.display = 'none';
-        okamochiCard.style.display = 'none';
-        fishInfoCard.style.display = 'block';
-      }
-
-      closeInfoBtn.addEventListener('click', () => { fishInfoCard.style.display = 'none'; });
-
-      dishesBtn.addEventListener('click', () => {
-        fishInfoCard.style.display = 'none';
-        dishCard.style.display = 'block';
-        selectDish(0);
-      });
-
-      backToFishBtn.addEventListener('click', () => {
-        dishCard.style.display = 'none';
-        fishInfoCard.style.display = 'block';
-      });
-
-      seeActualBtn.addEventListener('click', () => {
-        fishInfoCard.style.display = 'none';
-        okamochiCard.style.display = 'block';
-      });
-
-      closeOkamochiBtn.addEventListener('click', () => {
-        okamochiCard.style.display = 'none';
-        openFishCard();
-      });
-
-      orderSubmitBtn.addEventListener('click', () => {
-        const currentDish = dishesData[selectedDishIndex];
-        document.getElementById('ordered-item-name').innerText = currentDish.title;
-        dishCard.style.display = 'none';
-        orderConfirmModal.style.display = 'block';
-      });
-
-      closeOrderModalBtn.addEventListener('click', () => {
-        orderConfirmModal.style.display = 'none';
-      });
-
-      // スタートボタン
-      startBtn.addEventListener('click', async () => {
+      document.getElementById('start-btn').addEventListener('click', async () => {
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-          try {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') { alert('センサーの使用が拒否されました。'); return; }
-          } catch (error) { console.error(error); }
+          try { await DeviceOrientationEvent.requestPermission(); } catch (e) { console.error(e); }
         }
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-          webcam.srcObject = stream;
-        } catch (error) { alert('カメラへのアクセスが拒否されました。'); return; }
-        startScreen.style.display = 'none';
+          document.getElementById('webcam-bg').srcObject = stream;
+        } catch (e) { alert('カメラへのアクセスが必要です。'); return; }
+        document.getElementById('start-screen').style.display = 'none';
       });
     </script>
   </body>
