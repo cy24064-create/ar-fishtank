@@ -209,7 +209,7 @@
           <span class="step-badge">1. 職人技「船上神経締め」</span>
         </div>
 
-        <div style="background: #f0f7ff; padding: 8px; border-radius: 8px; border-left: 4px solid #0088ff; margin-bottom: 10px;">
+        <div style="background: #f0f7ff; padding: 8px; border-radius: 8px; border-left: 4px solid #0088ff; margin-bottom: 12px;">
           <div style="font-size: 11px; font-weight: bold; color: #002b49; margin-bottom: 2px;">
             ⚡ 死後硬直を「24時間」遅らせる
           </div>
@@ -218,10 +218,33 @@
           </div>
         </div>
 
-        <!-- 2. 六次産業化の図解カード -->
-        <div class="single-story-card">
-          <img src="rokuji.png" alt="六次産業化の図解">
-          <span class="step-badge" style="background: #dd6b20;">2. 六次産業化（市場スキップ）</span>
+        <!-- 2. 六次産業化の図解（パターンB：画像不要・HTML描画版） -->
+        <div style="background: #fffaf0; padding: 10px; border-radius: 12px; border: 1px solid #feebc8; margin-bottom: 10px;">
+          <div style="font-size: 11px; font-weight: bold; color: #dd6b20; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <span>🏷️ 2. 六次産業化（中間コストカット）</span>
+            <span style="font-size: 9px; background: #dd6b20; color: white; padding: 2px 6px; border-radius: 8px;">産地直送</span>
+          </div>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; text-align: center; font-size: 10px; background: white; padding: 8px 4px; border-radius: 8px; border: 1px dashed #fbd38d;">
+            <div style="flex: 1;">
+              <strong style="color: #2d3748; display: block;">👨‍🌾 漁師</strong>
+              <span style="font-size: 8.5px; color: #718096;">（一次産業）</span>
+            </div>
+            <div style="color: #dd6b20; font-weight: bold; font-size: 12px;">➔</div>
+            <div style="flex: 1;">
+              <strong style="color: #e53e3e; display: block; font-size: 9px;">中間市場カット</strong>
+              <span style="font-size: 8px; color: #e53e3e;">（市場・問屋なし）</span>
+            </div>
+            <div style="color: #dd6b20; font-weight: bold; font-size: 12px;">➔</div>
+            <div style="flex: 1;">
+              <strong style="color: #2d3748; display: block;">🍽️ 当店</strong>
+              <span style="font-size: 8.5px; color: #718096;">（三次産業）</span>
+            </div>
+          </div>
+          
+          <p style="font-size: 9.5px; color: #744210; margin: 6px 0 0 0; line-height: 1.3; text-align: center;">
+            市場を通さないダイレクト流通だから、最高鮮度と適正価格を両立！
+          </p>
         </div>
       </div>
 
@@ -351,9 +374,9 @@
           title: '🐟 勝浦産 活〆生本マグロ',
           origin: '和歌山県 勝浦漁港',
           status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
-          desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
+          desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂.勝浦産「生」本マグロのコクと脂の甘みをぜひ！',
           img: 'tuna.png',
-          baseScale: 3.75,               // マグロのサイズ (2.5 -> 3.75に1.5倍拡大)
+          baseScale: 3.75,               // マグロのサイズ
           hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '勝浦港 幸栄丸\n山本 勝 さん',
@@ -374,7 +397,7 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
           img: 'huetai.png',
-          baseScale: 2.7,                // フエダイのスケール (1.8 -> 2.7に1.5倍拡大)
+          baseScale: 2.7,                // フエダイのスケール
           hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '吹上浜 恵丸\n川口 毅 さん',
