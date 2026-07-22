@@ -77,7 +77,6 @@
       .tab-content.active { display: block; }
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
-      /* 岡持画像のサイズを拡大 */
       .okamochi-img { width: 100%; height: auto; max-height: 280px; object-fit: contain; border-radius: 10px; margin-bottom: 10px; background-color: #f7fafc; }
 
       .single-story-card { position: relative; height: 130px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #0f172a; display: flex; align-items: center; justify-content: center; }
@@ -140,7 +139,7 @@
       <div class="tab-menu">
         <button class="tab-btn active" id="btn-tab-basic">📌 基本情報</button>
         <button class="tab-btn" id="btn-tab-producer">👨‍🌾 生産者</button>
-        <button class="tab-btn" id="btn-tab-story">✨ 鮮度の秘密</button>
+        <button class="tab-btn" id="btn-tab-story">✨ おいしさの秘密</button>
       </div>
 
       <!-- タブ1: 基本情報 -->
@@ -183,14 +182,15 @@
         </div>
       </div>
 
-      <!-- タブ3: 鮮度の秘密 -->
+      <!-- タブ3: おいしさの秘密 -->
       <div id="tab-story" class="tab-content">
+        <!-- 1. 船上神経締め図解カード -->
         <div class="single-story-card">
           <img src="shinkei.png" alt="神経締めの図解">
           <span class="step-badge">1. 職人技「船上神経締め」</span>
         </div>
 
-        <div style="background: #f0f7ff; padding: 8px; border-radius: 8px; border-left: 4px solid #0088ff; margin-bottom: 8px;">
+        <div style="background: #f0f7ff; padding: 8px; border-radius: 8px; border-left: 4px solid #0088ff; margin-bottom: 10px;">
           <div style="font-size: 11px; font-weight: bold; color: #002b49; margin-bottom: 2px;">
             ⚡ 死後硬直を「24時間」遅らせる
           </div>
@@ -199,13 +199,20 @@
           </div>
         </div>
 
-        <div style="background: #fffaf0; padding: 8px; border-radius: 8px; border-left: 4px solid #dd6b20;">
+        <!-- 2. 六次産業化の図解カード -->
+        <div class="single-story-card">
+          <img src="rokuji.png" alt="六次産業化の図解">
+          <span class="step-badge" style="background: #dd6b20;">2. 六次産業化（市場スキップ）</span>
+        </div>
+
+        <div style="background: #fffaf0; padding: 8px; border-radius: 8px; border-left: 4px solid #dd6b20; margin-bottom: 6px;">
           <div style="font-size: 11px; font-weight: bold; color: #7b341e; margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between;">
-            <span>🚚 2. 六次産業化（市場スキップ）</span>
+            <span>🚚 漁場からお店へダイレクト直送</span>
             <span style="font-size: 8px; background: #ed8936; color: white; padding: 1px 5px; border-radius: 6px;">直通配送</span>
           </div>
-          <div style="font-size: 9.5px; color: #4a5568; line-height: 1.4; margin-bottom: 5px;">
-            中間流通をスキップし、漁場からお店へダイレクト直送。最高の状態でお手頃価格で提供します。
+          <div style="font-size: 9.5px; color: #4a5568; line-height: 1.4;">
+            【1次：漁獲】×【2次：加工/神経締め】×【3次：直営店舗販売】<br>
+            中間流通（市場）をスキップし、漁場からお店へダイレクト直送。最高の状態でお手頃価格で提供します。
           </div>
         </div>
       </div>
@@ -287,9 +294,10 @@
         raycaster="objects: .clickable; far: 100;">
         
         <a-assets>
-          <!-- 真鯛とマグロのアニメーション3Dモデル -->
+          <!-- 真鯛・マグロ・フエダイのアニメーション3Dモデル -->
           <a-asset-item id="tai-model" src="tai.glb"></a-asset-item>
           <a-asset-item id="tuna-model" src="tuna.glb"></a-asset-item>
+          <a-asset-item id="huetai-model" src="huetai.glb"></a-asset-item>
         </a-assets>
 
         <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
@@ -304,7 +312,7 @@
 
     <script>
       // -------------------------------------------------------------
-      // 🐟 魚種マスターデータ（真鯛 & マグロ）
+      // 🐟 魚種マスターデータ（真鯛, マグロ, フエダイ）
       // -------------------------------------------------------------
       const SPECIES_DATA = [
         {
@@ -336,8 +344,8 @@
           status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
           desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
           img: 'tuna.png',
-          baseScale: 2.5,                // マグロのサイズを大きく変更（タイより迫力アップ）
-          hitBox: { w: 10, h: 6, d: 4 }, // タップ判定も大きく調整
+          baseScale: 2.5,                // マグロのサイズ
+          hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '勝浦港 幸栄丸\n山本 勝 さん',
             img: 'ryoushi.png',
@@ -348,11 +356,32 @@
             { title: "本マグロのカマ塩焼き", price: "1,280円", desc: "一匹からわずかしか取れない希少部位。じっくり焼き上げた脂の乗りと濃厚な旨味が絶品！", sake: "特別純米酒（芳醇旨口）", img: "kamashio.png" },
             { title: "本マグロの兜煮", price: "1,480円", desc: "豪快な頭部を甘辛タレでじっくり炊き上げました。コラーゲンたっぷりの濃厚な味わい！", sake: "本醸造 熱燗", img: "kabutoni.png" }
           ]
+        },
+        {
+          id: 'huetai',
+          modelId: '#huetai-model',
+          title: '🐟 鹿児島県産 活〆フエダイ',
+          origin: '鹿児島県 吹上浜沖',
+          status: '本日水揚げ・船上活〆（超鮮度）',
+          desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
+          img: 'huetai.png',
+          baseScale: 0.12,               // フエダイのスケール
+          hitBox: { w: 12, h: 7, d: 5 }, // フエダイ用タップ判定ボックスサイズ
+          producer: {
+            name: '吹上浜 恵丸\n川口 毅 さん',
+            img: 'ryoushi.png',
+            quote: '南の豊かな海で育った極上のフエダイだ！白身とは思えないほどの濃厚な旨味を味わってくれ！'
+          },
+          dishes: [
+            { title: "鹿児島産 フエダイの刺身盛り", price: "1,680円", desc: "脂ののった最高級白身！ねっとりとした甘みと上品な歯ごたえが広がります。", sake: "薩摩 芋焼酎ロック", img: "sashimi.png" },
+            { title: "フエダイのカマ塩焼き", price: "980円", desc: "ジュワッと溢れる極上の脂とパリッとした皮目がたまらない贅沢な一品。", sake: "特別純米酒（冷酒）", img: "kamashio.png" },
+            { title: "フエダイの兜煮", price: "1,180円", desc: "頭部のフワフワな身とコラーゲンたっぷりの部位を甘辛タレでじっくり煮込みました。", sake: "純米酒（ぬる燗）", img: "kabutoni.png" }
+          ]
         }
       ];
 
-      // 画面内に配置する魚の組み合わせ（0: 真鯛 4匹, 1: マグロ 4匹）
-      const SPAWN_LIST = [0, 0, 0, 0, 1, 1, 1, 1];
+      // 画面内に配置する魚の組み合わせ（0: 真鯛 3匹, 1: マグロ 3匹, 2: フエダイ 3匹）
+      const SPAWN_LIST = [0, 0, 0, 1, 1, 1, 2, 2, 2];
 
       // -------------------------------------------------------------
       // AR生成 & アニメーション
@@ -479,7 +508,6 @@
           const btn = document.createElement('button');
           btn.className = `dish-tab-btn ${idx === 0 ? 'active' : ''}`;
           
-          // タブ名の見切れ防止処理（刺身盛り・カマ塩焼き・兜煮を正確に抽出）
           let tabLabel = dish.title;
           if (dish.title.includes("刺身")) tabLabel = "刺身盛り";
           else if (dish.title.includes("カマ")) tabLabel = "カマ塩焼き";
