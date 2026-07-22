@@ -77,7 +77,8 @@
       .tab-content.active { display: block; }
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
-      .okamochi-img { width: 100%; height: auto; max-height: 220px; object-fit: contain; border-radius: 10px; margin-bottom: 10px; background-color: #f7fafc; }
+      /* 岡持画像のサイズを拡大 */
+      .okamochi-img { width: 100%; height: auto; max-height: 280px; object-fit: contain; border-radius: 10px; margin-bottom: 10px; background-color: #f7fafc; }
 
       .single-story-card { position: relative; height: 130px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #0f172a; display: flex; align-items: center; justify-content: center; }
       .single-story-card img { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -103,7 +104,7 @@
       .close-btn { display: block; width: 100%; padding: 9px; margin-top: 8px; background: #e2e8f0; color: #4a5568; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 11.5px; }
       
       .dish-tab-menu { display: flex; gap: 6px; margin-bottom: 10px; }
-      .dish-tab-btn { flex: 1; padding: 7px 2px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 10.5px; font-weight: bold; color: #64748b; cursor: pointer; text-align: center; transition: all 0.2s; }
+      .dish-tab-btn { flex: 1; padding: 7px 4px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 11px; font-weight: bold; color: #64748b; cursor: pointer; text-align: center; transition: all 0.2s; white-space: nowrap; }
       .dish-tab-btn.active { background: #002b49; color: white; border-color: #002b49; box-shadow: 0 2px 6px rgba(0,43,73,0.3); }
 
       .order-btn { display: block; width: 100%; padding: 12px; margin-top: 8px; background: linear-gradient(135deg, #e53e3e, #dd6b20); color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; font-size: 13.5px; box-shadow: 0 4px 12px rgba(229,62,62,0.4); }
@@ -117,7 +118,7 @@
         .landscape-split .landscape-media { width: 42%; flex-shrink: 0; }
         .landscape-split .landscape-media img { height: 120px; margin-bottom: 0; }
         .landscape-split .landscape-body { flex: 1; }
-        .okamochi-img { max-height: 130px; margin-bottom: 0; }
+        .okamochi-img { max-height: 180px; margin-bottom: 0; }
       }
     </style>
   </head>
@@ -314,7 +315,7 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み。',
           img: 'tai.png',
-          baseScale: 0.11,           // 真鯛のスケール
+          baseScale: 0.11,               // 真鯛のスケール
           hitBox: { w: 14, h: 8, d: 6 }, // 真鯛用タップ判定ボックスサイズ
           producer: {
             name: '第十八 豊漁丸\n鈴木 健太郎 さん',
@@ -335,8 +336,8 @@
           status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
           desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
           img: 'tuna.png',
-          baseScale: 0.8,            // マグロを迫力ある大きさに設定
-          hitBox: { w: 3.5, h: 2.0, d: 1.2 }, // マグロ用タップ判定ボックスサイズ
+          baseScale: 2.5,                // マグロのサイズを大きく変更（タイより迫力アップ）
+          hitBox: { w: 10, h: 6, d: 4 }, // タップ判定も大きく調整
           producer: {
             name: '勝浦港 幸栄丸\n山本 勝 さん',
             img: 'ryoushi.png',
@@ -477,7 +478,14 @@
         data.dishes.forEach((dish, idx) => {
           const btn = document.createElement('button');
           btn.className = `dish-tab-btn ${idx === 0 ? 'active' : ''}`;
-          btn.innerText = dish.title.split(' ')[1] || dish.title.substring(0, 6);
+          
+          // タブ名の見切れ防止処理（刺身盛り・カマ塩焼き・兜煮を正確に抽出）
+          let tabLabel = dish.title;
+          if (dish.title.includes("刺身")) tabLabel = "刺身盛り";
+          else if (dish.title.includes("カマ")) tabLabel = "カマ塩焼き";
+          else if (dish.title.includes("兜")) tabLabel = "兜煮";
+
+          btn.innerText = tabLabel;
           btn.onclick = () => selectDish(idx);
           tabContainer.appendChild(btn);
         });
