@@ -283,7 +283,7 @@
         renderer="alpha: true; colorManagement: true; precision: highp; antialias: true; logarithmicDepthBuffer: true;"
         vr-mode-ui="enabled: false"
         cursor="rayOrigin: mouse; fuse: false;"
-        raycaster="objects: .clickable">
+        raycaster="objects: .clickable; far: 100;">
         
         <a-assets>
           <!-- 真鯛とマグロのアニメーション3Dモデル -->
@@ -314,7 +314,8 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み。',
           img: 'tai.png',
-          baseScale: 0.11, // 真鯛の基本サイズ
+          baseScale: 0.11,           // 真鯛のスケール
+          hitBox: { w: 14, h: 8, d: 6 }, // 真鯛用タップ判定ボックスサイズ
           producer: {
             name: '第十八 豊漁丸\n鈴木 健太郎 さん',
             img: 'ryoushi.png',
@@ -334,7 +335,8 @@
           status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
           desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
           img: 'tuna.png',
-          baseScale: 0.15, // マグロは少し大きめに設定
+          baseScale: 0.8,            // マグロを迫力ある大きさに設定（0.15 → 0.8）
+          hitBox: { w: 3.5, h: 2.0, d: 1.2 }, // マグロ用タップ判定ボックスサイズ
           producer: {
             name: '勝浦港 幸栄丸\n山本 勝 さん',
             img: 'ryoushi.png',
@@ -349,8 +351,9 @@
       ];
 
       // 画面内に配置する魚の組み合わせ（0: 真鯛, 1: マグロ）
-      // 例: 真鯛2匹 + マグロ2匹 の計4匹
-      const SPAWN_LIST = [0, 0, 1, 1];
+      // [0, 1] で真鯛1匹・マグロ1匹（軽量で最も動作がスムーズ）
+      // 魚を増やしたい場合は [0, 0, 1, 1] などに変更可能です
+      const SPAWN_LIST = [0, 1];
 
       // -------------------------------------------------------------
       // AR生成 & アニメーション
@@ -369,31 +372,34 @@
         fishEntity.setAttribute('gltf-model', species.modelId);
         fishEntity.setAttribute('animation-mixer', '');
 
-        // 魚種別の基本サイズ ＋ 個体差ランダム調整
-        const scale = species.baseScale + (Math.random() - 0.5) * 0.02;
+        // スケール設定（個体差ランダム調整付き）
+        const scale = species.baseScale + (Math.random() - 0.5) * (species.baseScale * 0.1);
         fishEntity.setAttribute('scale', `${scale} ${scale} ${scale}`);
 
-        // タップ判定用の透明スフィア
-        const sphere = document.createElement('a-sphere');
-        sphere.setAttribute('class', 'clickable');
-        sphere.setAttribute('radius', '15');
-        sphere.setAttribute('material', 'visible: false');
-        fishEntity.appendChild(sphere);
+        // --- タップ判定用（ヒットボックス）の透明な箱を追加 ---
+        const hitBox = document.createElement('a-box');
+        hitBox.setAttribute('class', 'clickable');
+        hitBox.setAttribute('tap-action', `speciesIndex: ${speciesIndex}`);
+        hitBox.setAttribute('width', species.hitBox.w);
+        hitBox.setAttribute('height', species.hitBox.h);
+        hitBox.setAttribute('depth', species.hitBox.d);
+        hitBox.setAttribute('material', 'visible: false');
+        fishEntity.appendChild(hitBox);
 
         // 初期位置の設定
-        const posX = (Math.random() - 0.5) * 3;
-        const posY = (Math.random() - 0.5) * 1.2;
-        const posZ = -1.5 - Math.random() * 2;
+        const posX = (Math.random() - 0.5) * 2.5;
+        const posY = (Math.random() - 0.5) * 1.0;
+        const posZ = -1.8 - Math.random() * 1.5;
         fishEntity.setAttribute('position', `${posX} ${posY} ${posZ}`);
 
         container.appendChild(fishEntity);
 
         fishes.push({
           entity: fishEntity,
-          velocity: new THREE.Vector3((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.005, (Math.random() - 0.5) * 0.01),
+          velocity: new THREE.Vector3((Math.random() - 0.5) * 0.008, (Math.random() - 0.5) * 0.004, (Math.random() - 0.5) * 0.008),
           acceleration: new THREE.Vector3(),
           swimTime: Math.random() * 100,
-          speedFactor: 0.8 + Math.random() * 0.5
+          speedFactor: 0.8 + Math.random() * 0.4
         });
       });
 
@@ -402,22 +408,22 @@
         fishes.forEach((f) => {
           if (f.entity && f.entity.object3D && f.entity.object3D.visible) {
             const obj = f.entity.object3D;
-            f.swimTime += 0.05 * f.speedFactor;
+            f.swimTime += 0.04 * f.speedFactor;
 
-            const wanderX = (Math.random() - 0.5) * 0.0006;
+            const wanderX = (Math.random() - 0.5) * 0.0005;
             const wanderY = (Math.random() - 0.5) * 0.0002;
-            const wanderZ = (Math.random() - 0.5) * 0.0006;
+            const wanderZ = (Math.random() - 0.5) * 0.0005;
             f.acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
 
             const dist = obj.position.length();
-            if (dist > 3.5) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
+            if (dist > 3.2) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
             else if (dist < 1.0) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
 
-            if (obj.position.y > 0.8) f.acceleration.y -= 0.0003;
-            else if (obj.position.y < -0.8) f.acceleration.y += 0.0003;
+            if (obj.position.y > 0.7) f.acceleration.y -= 0.0003;
+            else if (obj.position.y < -0.7) f.acceleration.y += 0.0003;
 
             f.velocity.add(f.acceleration);
-            f.velocity.clampLength(0.004 * f.speedFactor, 0.012 * f.speedFactor);
+            f.velocity.clampLength(0.003 * f.speedFactor, 0.010 * f.speedFactor);
             obj.position.add(f.velocity);
             f.acceleration.set(0, 0, 0);
 
@@ -439,6 +445,11 @@
       // -------------------------------------------------------------
       let currentSpeciesIndex = 0;
       let selectedDishIndex = 0;
+
+      const fishInfoCard = document.getElementById('fish-info-card');
+      const dishCard = document.getElementById('dish-card');
+      const okamochiCard = document.getElementById('okamochi-card');
+      const orderConfirmModal = document.getElementById('order-confirm-modal');
 
       function openFishCard(speciesIndex) {
         currentSpeciesIndex = speciesIndex;
