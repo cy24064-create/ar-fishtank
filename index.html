@@ -29,10 +29,11 @@
       #start-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 20, 40, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white; }
       #start-btn { padding: 15px 40px; font-size: 18px; background: #00a2ff; color: white; border: none; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,162,255,0.5); cursor: pointer; }
       
-      /* --- ポップアップカード & タブデザイン --- */
-      #fish-info-card { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 88%; max-width: 350px; background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(12px); border-radius: 18px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); z-index: 10000; color: #2d3748; animation: fadeIn 0.3s ease-out; }
+      /* --- ポップアップ共通スタイル --- */
+      .popup-card { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 88%; max-width: 350px; background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(12px); border-radius: 18px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); z-index: 10000; color: #2d3748; animation: fadeIn 0.3s ease-out; }
       @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
 
+      /* タブデザイン */
       .tab-menu { display: flex; border-bottom: 2px solid #edf2f7; margin-bottom: 12px; }
       .tab-btn { flex: 1; padding: 8px 2px; background: none; border: none; font-size: 11px; font-weight: bold; color: #a0aec0; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; text-align: center; }
       .tab-btn.active { color: #0088ff; border-bottom-color: #0088ff; }
@@ -43,61 +44,45 @@
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
       
       /* インパクト画像スタイル */
-      .single-story-card {
-        position: relative;
-        height: 150px;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        background-color: #0f172a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .single-story-card img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        display: block;
-      }
-      .single-story-card .step-badge {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        background: #e53e3e;
-        color: white;
-        font-size: 10px;
-        font-weight: bold;
-        padding: 3px 8px;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        z-index: 2;
-      }
+      .single-story-card { position: relative; height: 140px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #0f172a; display: flex; align-items: center; justify-content: center; }
+      .single-story-card img { width: 100%; height: 100%; object-fit: contain; display: block; }
+      .single-story-card .step-badge { position: absolute; top: 8px; left: 8px; background: #e53e3e; color: white; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); z-index: 2; }
 
       /* 生産者プロフィールのレイアウト */
       .producer-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; background: #f7fafc; padding: 8px 12px; border-radius: 12px; border: 1px solid #e2e8f0; }
-      .producer-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #0088ff; background-color: #edf2f7; flex-shrink: 0; }
+      .producer-img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #0088ff; background-color: #edf2f7; flex-shrink: 0; }
       .producer-info { font-size: 12px; color: #2d3748; }
 
-      .info-header { font-size: 18px; font-weight: bold; color: #002b49; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-      .info-row { margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #4a5568; }
+      .info-header { font-size: 17px; font-weight: bold; color: #002b49; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+      .info-row { margin-bottom: 8px; font-size: 12px; line-height: 1.4; color: #4a5568; }
       .info-label { font-weight: bold; color: #0088ff; display: block; font-size: 11px; margin-bottom: 2px; }
 
       /* 生産者の想い吹き出し */
-      .quote-box { background: #f0f7ff; border-left: 4px solid #0088ff; padding: 10px; border-radius: 6px; font-size: 12px; color: #2d3748; margin-bottom: 12px; line-height: 1.5; }
+      .quote-box { background: #f0f7ff; border-left: 4px solid #0088ff; padding: 10px; border-radius: 6px; font-size: 11.5px; color: #2d3748; margin-bottom: 12px; line-height: 1.4; }
       
       /* タイムラインデザイン */
       .timeline { background: #faf5ff; border: 1px solid #e9d8fd; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
       .timeline-title { font-size: 11px; font-weight: bold; color: #6b46c1; margin-bottom: 6px; }
-      .timeline-item { font-size: 11px; color: #4a5568; display: flex; align-items: center; margin-bottom: 4px; }
-      .timeline-time { font-weight: bold; color: #805ad5; width: 80px; display: inline-block; font-family: monospace; }
+      .timeline-item { font-size: 10.5px; color: #4a5568; display: flex; align-items: center; margin-bottom: 4px; }
+      .timeline-time { font-weight: bold; color: #805ad5; width: 75px; display: inline-block; font-family: monospace; }
 
       /* 下部ボタン */
       .action-button-container { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
       .action-btn { flex: 1; padding: 10px; background: #00a2ff; color: white; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 11px; box-shadow: 0 4px 10px rgba(0,162,255,0.3); }
-      .close-btn { display: block; width: 100%; padding: 10px; margin-top: 8px; background: #002b49; color: white; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; }
+      .close-btn { display: block; width: 100%; padding: 10px; margin-top: 8px; background: #e2e8f0; color: #4a5568; text-align: center; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; }
       
+      /* 料理選択タブ */
+      .dish-tab-menu { display: flex; gap: 6px; margin-bottom: 12px; }
+      .dish-tab-btn { flex: 1; padding: 8px 4px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 11px; font-weight: bold; color: #64748b; cursor: pointer; text-align: center; transition: all 0.2s; }
+      .dish-tab-btn.active { background: #002b49; color: white; border-color: #002b49; box-shadow: 0 2px 6px rgba(0,43,73,0.3); }
+
+      /* 注文確定ボタン */
+      .order-btn { display: block; width: 100%; padding: 13px; margin-top: 10px; background: linear-gradient(135deg, #e53e3e, #dd6b20); color: white; text-align: center; border-radius: 25px; font-weight: bold; border: none; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(229,62,62,0.4); }
+      .order-btn:active { transform: scale(0.98); }
+
+      /* 注文完了モーダル */
+      #order-confirm-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 300px; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); z-index: 10001; text-align: center; }
+
       #instructions { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 13px; z-index: 998; text-align: center; display: none; width: 80%; pointer-events: auto; cursor: pointer; }
     </style>
   </head>
@@ -117,10 +102,8 @@
     <!-- 案内表示 -->
     <div id="instructions"></div>
 
-    <!-- 魚の詳細情報カード（3タブ仕様） -->
-    <div id="fish-info-card">
-      
-      <!-- 3つのタブボタン -->
+    <!-- 1. 魚の詳細情報カード -->
+    <div id="fish-info-card" class="popup-card">
       <div class="tab-menu">
         <button class="tab-btn active" id="btn-tab-basic">📌 基本情報</button>
         <button class="tab-btn" id="btn-tab-producer">👨‍🌾 生産者</button>
@@ -161,54 +144,95 @@
         </div>
       </div>
 
-      <!-- タブ3: 鮮度の秘密（技術 × 六次産業化） -->
+      <!-- タブ3: 鮮度の秘密 -->
       <div id="tab-story" class="tab-content">
-        
-        <!-- 1. 職人の技術（神経締め） -->
         <div class="single-story-card">
           <img src="shinkei.png" alt="神経締めの図解">
           <span class="step-badge">1. 職人技「船上神経締め」</span>
         </div>
 
         <div style="background: #f0f7ff; padding: 10px; border-radius: 8px; border-left: 4px solid #0088ff; margin-bottom: 10px;">
-          <div style="font-size: 12px; font-weight: bold; color: #002b49; margin-bottom: 3px;">
+          <div style="font-size: 11.5px; font-weight: bold; color: #002b49; margin-bottom: 2px;">
             ⚡ 死後硬直を「24時間」遅らせる
           </div>
-          <div style="font-size: 10.5px; color: #4a5568; line-height: 1.4;">
+          <div style="font-size: 10px; color: #4a5568; line-height: 1.4;">
             船上で1匹ずつ手作業で神経締めを行い、魚のストレスをゼロに。獲れたて特有の歯ごたえと旨味を極限キープ！
           </div>
         </div>
 
-        <!-- 2. 流通の構造（六次産業化） -->
         <div style="background: #fffaf0; padding: 10px; border-radius: 8px; border-left: 4px solid #dd6b20;">
-          <div style="font-size: 12px; font-weight: bold; color: #7b341e; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
-            <span>🚚 2. 六次産業化（産直・市場スキップ）</span>
-            <span style="font-size: 8.5px; background: #ed8936; color: white; padding: 2px 6px; border-radius: 8px; font-weight: bold;">生産×加工×店舗</span>
+          <div style="font-size: 11.5px; font-weight: bold; color: #7b341e; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span>🚚 2. 六次産業化（市場スキップ）</span>
+            <span style="font-size: 8px; background: #ed8936; color: white; padding: 2px 5px; border-radius: 6px;">直通配送</span>
           </div>
-          <div style="font-size: 10.5px; color: #4a5568; line-height: 1.4; margin-bottom: 6px;">
-            一般的な「市場・競り」を一切通さず、漁場からお店へ超速でダイレクト輸送。中間マージンをカットし、最高の状態をお手頃価格で提供します。
+          <div style="font-size: 10px; color: #4a5568; line-height: 1.4; margin-bottom: 6px;">
+            市場を通さず漁場からお店へダイレクト輸送。中間コストをカットし、最高の状態をお手頃価格で提供します。
           </div>
 
-          <!-- わかりやすい流通フロー図 -->
-          <div style="display: flex; align-items: center; justify-content: space-around; background: rgba(237, 137, 54, 0.12); padding: 6px 4px; border-radius: 6px; font-size: 9.5px; color: #7b341e; font-weight: bold; text-align: center;">
+          <div style="display: flex; align-items: center; justify-content: space-around; background: rgba(237, 137, 54, 0.12); padding: 5px 2px; border-radius: 6px; font-size: 9px; color: #7b341e; font-weight: bold;">
             <span>⚓ 漁場・船元</span>
             <span style="color: #ed8936;">➔</span>
-            <span style="color: #a0aec0; text-decoration: line-through; font-weight: normal; font-size: 8.5px;">卸売市場</span>
+            <span style="color: #a0aec0; text-decoration: line-through; font-weight: normal; font-size: 8px;">卸売市場</span>
             <span style="color: #ed8936;">➔</span>
             <span>🍽️ 当店直通</span>
           </div>
         </div>
-
       </div>
 
-      <!-- 下部ボタンエリア -->
       <div class="action-button-container">
-        <button class="action-btn" id="dishes-btn">この魚の料理</button>
-        <button class="action-btn" id="see-actual-btn">実際に見る</button>
+        <button class="action-btn" id="dishes-btn" style="background: linear-gradient(135deg, #0088ff, #0055ff);">🍽️ この魚の料理</button>
+        <button class="action-btn" id="see-actual-btn" style="background: #4a5568;">👀 実際に見る</button>
       </div>
       <button class="close-btn" id="close-info-btn">閉じる</button>
     </div>
 
+    <!-- 2. 料理選び & 注文ポップアップ -->
+    <div id="dish-card" class="popup-card">
+      <div style="font-size: 16px; font-weight: bold; color: #002b49; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🍽️ 本日の真鯛料理</span>
+        <span style="font-size: 11px; background: #e6fffa; color: #234e52; padding: 2px 8px; border-radius: 10px; border: 1px solid #b2f5ea;">本日のおすすめ</span>
+      </div>
+
+      <!-- 料理切り替えタブ -->
+      <div class="dish-tab-menu">
+        <button class="dish-tab-btn active" onclick="selectDish(0)">✨ 姿造り</button>
+        <button class="dish-tab-btn" onclick="selectDish(1)">🔥 カマ塩焼き</button>
+        <button class="dish-tab-btn" onclick="selectDish(2)">🍲 兜煮</button>
+      </div>
+
+      <!-- 料理詳細エリア -->
+      <div id="dish-display">
+        <img id="dish-img" src="tai.png" class="fish-img" style="height: 130px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+          <strong id="dish-title" style="font-size: 15px; color: #002b49;">日向産 活〆真鯛の姿造り</strong>
+          <span id="dish-price" style="font-size: 16px; font-weight: bold; color: #e53e3e;">￥1,480<span style="font-size: 10px; color: #718096; font-weight: normal;">(税込)</span></span>
+        </div>
+        <p id="dish-desc" style="font-size: 11px; color: #4a5568; line-height: 1.4; margin: 0 0 8px 0;">
+          神経締めならではのコリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！
+        </p>
+        
+        <div style="background: #f7fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 10.5px; color: #2d3748; margin-bottom: 8px;">
+          🍶 <strong>相性抜群のお酒：</strong> <span id="dish-sake" style="color: #0088ff; font-weight: bold;">日向の地酒 純米吟醸</span>
+        </div>
+      </div>
+
+      <!-- 注文ボタン -->
+      <button class="order-btn" id="order-submit-btn">🛒 この料理を注文する</button>
+      <button class="close-btn" id="back-to-fish-btn">魚の画面に戻る</button>
+    </div>
+
+    <!-- 3. 注文完了通知ポップアップ -->
+    <div id="order-confirm-modal">
+      <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+      <div style="font-size: 16px; font-weight: bold; color: #002b49; margin-bottom: 6px;">ご注文を承りました！</div>
+      <div id="ordered-item-name" style="font-size: 13px; font-weight: bold; color: #e53e3e; margin-bottom: 10px;">日向産 活〆真鯛の姿造り</div>
+      <p style="font-size: 11px; color: #718096; line-height: 1.5; margin-bottom: 15px;">
+        スタッフがお席まで確認にお伺いいたします。<br>出来上がりまで楽しみにお待ちください！
+      </p>
+      <button class="action-btn" id="close-order-modal-btn" style="width: 100%;">閉じる</button>
+    </div>
+
+    <!-- AR空間 -->
     <div id="ar-scene-container">
       <a-scene 
         id="sceneEl" embedded 
@@ -222,14 +246,9 @@
         </a-assets>
 
         <!-- カメラ -->
-        <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;">
-          <a-entity id="dishes-space" visible="false" position="0 -0.1 -1.5">
-            <a-cylinder radius="0.3" height="0.02" color="white"></a-cylinder>
-            <a-box width="0.1" height="0.05" depth="0.2" color="red" position="0 0.03 0"></a-box>
-          </a-entity>
-        </a-entity>
+        <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
 
-        <!-- タイ（自律遊泳） -->
+        <!-- 3Dタイ -->
         <a-entity 
           id="my-fish" 
           class="clickable"
@@ -252,15 +271,63 @@
       const startScreen = document.getElementById('start-screen');
       const webcam = document.getElementById('webcam-bg');
       const fish = document.querySelector('#my-fish');
-      const infoCard = document.getElementById('fish-info-card');
-      const closeInfoBtn = document.getElementById('close-info-btn');
-      const instructions = document.getElementById('instructions');
       
+      const fishInfoCard = document.getElementById('fish-info-card');
+      const dishCard = document.getElementById('dish-card');
+      const orderConfirmModal = document.getElementById('order-confirm-modal');
+      const instructions = document.getElementById('instructions');
+
       const dishesBtn = document.getElementById('dishes-btn');
       const seeActualBtn = document.getElementById('see-actual-btn');
-      const dishesSpace = document.getElementById('dishes-space');
+      const closeInfoBtn = document.getElementById('close-info-btn');
+      const backToFishBtn = document.getElementById('back-to-fish-btn');
+      const orderSubmitBtn = document.getElementById('order-submit-btn');
+      const closeOrderModalBtn = document.getElementById('close-order-modal-btn');
 
-      // 3タブの切り替え処理
+      // 料理データ
+      const dishesData = [
+        {
+          title: "日向産 活〆真鯛の姿造り",
+          price: "￥1,480",
+          desc: "船上神経締めならではのコリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！",
+          sake: "日向の地酒 純米吟醸（淡麗辛口）",
+          img: "tai.png"
+        },
+        {
+          title: "日向産 活〆真鯛のカマ塩焼き",
+          price: "￥880",
+          desc: "一匹から2つしか取れない希少部位。パリッとした皮目とジューシーな脂の乗った身が絶品！",
+          sake: "特別純米酒（コクのある芳醇旨口）",
+          img: "tai.png"
+        },
+        {
+          title: "日向産 活〆真鯛の兜煮（あら煮）",
+          price: "￥980",
+          desc: "鯛の旨味が凝縮された頭部を、特製の甘辛タレでじっくり炊き上げました。お酒が進む味わい。",
+          sake: "本醸造 熱燗（まろやかな味わい）",
+          img: "tai.png"
+        }
+      ];
+
+      let selectedDishIndex = 0;
+
+      function selectDish(index) {
+        selectedDishIndex = index;
+        const data = dishesData[index];
+        
+        document.querySelectorAll('.dish-tab-btn').forEach((btn, i) => {
+          if(i === index) btn.classList.add('active');
+          else btn.classList.remove('active');
+        });
+
+        document.getElementById('dish-title').innerText = data.title;
+        document.getElementById('dish-price').innerHTML = `${data.price}<span style="font-size: 10px; color: #718096; font-weight: normal;">(税込)</span>`;
+        document.getElementById('dish-desc').innerText = data.desc;
+        document.getElementById('dish-sake').innerText = data.sake;
+        document.getElementById('dish-img').src = data.img;
+      }
+
+      // 3タブ切り替え
       const btnTabBasic = document.getElementById('btn-tab-basic');
       const btnTabProducer = document.getElementById('btn-tab-producer');
       const btnTabStory = document.getElementById('btn-tab-story');
@@ -280,71 +347,58 @@
       btnTabProducer.addEventListener('click', () => switchTab(btnTabProducer, tabProducer));
       btnTabStory.addEventListener('click', () => switchTab(btnTabStory, tabStory));
 
-      // リアルタイムで秒単位まで時計を毎秒更新するタイマー機能
+      // 時計の更新
       function updateClock() {
         const now = new Date();
         const jstTimeString = now.toLocaleTimeString('ja-JP', {
-          timeZone: 'Asia/Tokyo',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
+          timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
         });
         const clockEl = document.getElementById('current-time-label');
-        if (clockEl) {
-          clockEl.innerText = `【${jstTimeString}】`;
-        }
+        if (clockEl) clockEl.innerText = `【${jstTimeString}】`;
       }
-      
       setInterval(updateClock, 1000);
-      updateClock();
 
-      // カードを開く
+      // 魚カードを開く
       function openFishCard() {
         updateClock();
-        infoCard.style.display = 'block';
+        dishCard.style.display = 'none';
+        fishInfoCard.style.display = 'block';
       }
 
-      // 案内タップ時
-      instructions.addEventListener('click', () => {
-        openFishCard();
-        instructions.style.display = 'none';
-        dishesSpace.setAttribute('visible', false);
-        fish.setAttribute('visible', true);
+      closeInfoBtn.addEventListener('click', () => { fishInfoCard.style.display = 'none'; });
+
+      // 「この魚の料理」ボタンを押した時
+      dishesBtn.addEventListener('click', () => {
+        fishInfoCard.style.display = 'none';
+        dishCard.style.display = 'block';
+        selectDish(0);
       });
 
-      closeInfoBtn.addEventListener('click', () => {
-        infoCard.style.display = 'none';
+      backToFishBtn.addEventListener('click', () => {
+        dishCard.style.display = 'none';
+        fishInfoCard.style.display = 'block';
       });
-      
-      dishesBtn.addEventListener('click', () => {
-        infoCard.style.display = 'none';
-        fish.setAttribute('visible', false); 
-        dishesSpace.setAttribute('visible', true); 
-        instructions.innerText = "この魚を使った料理が登場！\n（タップして情報画面に戻る）";
-        instructions.style.display = 'block';
+
+      // 注文ボタンを押した時
+      orderSubmitBtn.addEventListener('click', () => {
+        const currentDish = dishesData[selectedDishIndex];
+        document.getElementById('ordered-item-name').innerText = currentDish.title;
+        dishCard.style.display = 'none';
+        orderConfirmModal.style.display = 'block';
+      });
+
+      closeOrderModalBtn.addEventListener('click', () => {
+        orderConfirmModal.style.display = 'none';
       });
 
       seeActualBtn.addEventListener('click', () => {
-        infoCard.style.display = 'none';
-        instructions.innerText = "ただいま、おかもちをお持ちいたします。\n（タップして情報画面に戻る）";
+        fishInfoCard.style.display = 'none';
+        instructions.innerText = "ただいま、おかもちをお持ちいたします。\n（タップで消去）";
         instructions.style.display = 'block';
-        setTimeout(() => {
-          instructions.style.display = 'none';
-        }, 8000);
       });
 
-      fish.addEventListener('model-loaded', () => {
-        const mesh = fish.getObject3D('mesh');
-        if (mesh) {
-          mesh.traverse((node) => {
-            if (node.isMesh) {
-              node.material.side = THREE.DoubleSide; 
-              node.material.transparent = false; 
-              node.material.depthWrite = true;
-            }
-          });
-        }
+      instructions.addEventListener('click', () => {
+        instructions.style.display = 'none';
       });
 
       // 自然な泳ぎの制御
