@@ -7,7 +7,7 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
-    <!-- ARタップ検知 & 3Dモデル色み・欠け補正システム -->
+    <!-- ARタップ検知 & 3Dモデル欠け・暗さ補正システム -->
     <script>
       AFRAME.registerComponent('tap-action', {
         schema: { speciesIndex: { type: 'int', default: 0 } },
@@ -39,17 +39,25 @@
                     node.material.map = loadedTexture;
                   }
                   
-                  // 本来の色とコントラストを維持
-                  if (node.material.color) node.material.color.setHex(0xffffff);
-                  if (node.material.emissive) node.material.emissive.setHex(0x000000);
+                  // 1. 暗さ解消（カラー補正・自己発光）
+                  // 下地色を白にして発色をクリアに
+                  if (node.material.color) {
+                    node.material.color.setHex(0xffffff);
+                  }
+                  // 影を和らげるために自己発光(emissive)を追加（ここを修正）
+                  if (node.material.emissive) {
+                    node.material.emissive.setHex(0x333333); // 影の部分を明るく補正
+                  }
 
-                  // 面の欠け（透過バグ）防止
-                  node.material.side = THREE.DoubleSide;
+                  // 2. 欠け・透過バグ防止（DoubleSide設定）
+                  // 両面を描画するように設定（裏面抜けを防止）（ここを追加）
+                  node.material.side = THREE.DoubleSide; 
+                  
                   node.material.transparent = false;
                   node.material.opacity = 1.0;
                   node.material.depthWrite = true;
                   node.material.depthTest = true;
-
+                  // alphaTestは DoubleSideと相性が悪い場合があるため削除
                   node.material.needsUpdate = true;
                 }
               });
@@ -353,7 +361,7 @@
           title: '🐟 日向産 活〆真鯛',
           origin: '福井県 美浜町 日向漁港',
           status: '本日水揚げ・船上活〆（超鮮度）',
-          desc: '激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み。',
+          desc: '激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み。勝浦産「生」本マグロのコクと脂の甘みをぜひ！',
           img: 'tai.png',
           baseScale: 0.11,               // 真鯛のスケール
           hitBox: { w: 14, h: 8, d: 6 }, // 真鯛用タップ判定ボックスサイズ
@@ -374,9 +382,9 @@
           title: '🐟 勝浦産 活〆生本マグロ',
           origin: '和歌山県 勝浦漁港',
           status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
-          desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂.勝浦産「生」本マグロのコクと脂の甘みをぜひ！',
+          desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
           img: 'tuna.png',
-          baseScale: 3.75,               // マグロのサイズ
+          baseScale: 3.75,               // マグロのサイズ (1.5倍)
           hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '勝浦港 幸栄丸\n山本 勝 さん',
@@ -397,7 +405,7 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
           img: 'huetai.png',
-          baseScale: 2.7,                // フエダイのスケール
+          baseScale: 2.7,                // フエダイのスケール (1.5倍)
           hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '吹上浜 恵丸\n川口 毅 さん',
