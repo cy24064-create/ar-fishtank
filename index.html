@@ -7,7 +7,7 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
-    <!-- ARタップ検知 & テクスチャ/透過補正システム -->
+    <!-- ARタップ検知 & 3Dモデル欠け・暗さ補正システム -->
     <script>
       AFRAME.registerComponent('tap-action', {
         schema: { speciesIndex: { type: 'int', default: 0 } },
@@ -34,17 +34,25 @@
 
               mesh.traverse((node) => {
                 if (node.isMesh && node.material) {
+                  // テクスチャの適用
                   if (loadedTexture && (!node.material.map || !node.material.map.image)) {
                     node.material.map = loadedTexture;
                   }
-                  if (node.material.color) {
-                    node.material.color.setHex(0xffffff);
-                  }
+                  
+                  // 1. 暗さ解消（カラー補正・自己発光・粗さ調整）
+                  if (node.material.color) node.material.color.setHex(0xffffff);
+                  if (node.material.emissive) node.material.emissive.setHex(0x333333); // 影部分を明るく補正
+                  if ('roughness' in node.material) node.material.roughness = 0.6;
+                  if ('metalness' in node.material) node.material.metalness = 0.0;
+
+                  // 2. 欠け・透過バグ防止（両面描画 & デプス書き込み強制）
+                  node.material.side = THREE.DoubleSide; // 裏面カリング防止（欠け防止）
                   node.material.transparent = false;
                   node.material.opacity = 1.0;
                   node.material.depthWrite = true;
                   node.material.depthTest = true;
-                  node.material.alphaTest = 0.5;
+                  node.material.alphaTest = 0.0;
+
                   node.material.needsUpdate = true;
                 }
               });
@@ -308,8 +316,9 @@
         <!-- 魚が生成されるコンテナ -->
         <a-entity id="fishes-container"></a-entity>
 
-        <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
-        <a-entity light="type: directional; intensity: 0.8;" position="1 2 1"></a-entity>
+        <!-- 暗さ解消のためライティング強度をアップ -->
+        <a-entity light="type: ambient; intensity: 1.8;"></a-entity>
+        <a-entity light="type: directional; intensity: 1.0;" position="1 2 1"></a-entity>
       </a-scene>
     </div>
 
@@ -368,7 +377,7 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
           img: 'huetai.png',
-          baseScale: 1.8,                // モデルの元サイズに合わせ、見た目が真鯛(0.11)と同等になるよう拡大調整
+          baseScale: 1.8,                // フエダイのスケール
           hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '吹上浜 恵丸\n川口 毅 さん',
