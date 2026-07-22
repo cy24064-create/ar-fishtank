@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>四十八漁業 - 鮮度とストーリーをお届け</title>
+    <title>四十八漁場 - 鮮度とストーリーをお届け</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
-    <!-- ARタップ検知システム -->
+    <!-- ARタップ検知 & 透過・高解像度修正システム -->
     <script>
       AFRAME.registerComponent('tap-action', {
         schema: { action: { type: 'string' } },
@@ -16,6 +16,27 @@
             e.stopPropagation();
             if (this.data.action === 'show-card') {
               openFishCard();
+            }
+          });
+        }
+      });
+
+      // 3D魚モデルの透けを防止し、くっきり表示させる補正コンポーネント
+      AFRAME.registerComponent('fix-fish-material', {
+        init: function () {
+          this.el.addEventListener('model-loaded', () => {
+            const mesh = this.el.getObject3D('mesh');
+            if (mesh) {
+              mesh.traverse((node) => {
+                if (node.isMesh && node.material) {
+                  node.material.transparent = false;
+                  node.material.opacity = 1.0;
+                  node.material.depthWrite = true;
+                  node.material.depthTest = true;
+                  node.material.alphaTest = 0.5;
+                  node.material.needsUpdate = true;
+                }
+              });
             }
           });
         }
@@ -82,8 +103,6 @@
 
       /* 注文完了モーダル */
       #order-confirm-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 300px; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); z-index: 10001; text-align: center; }
-
-      #instructions { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0, 16, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.3); color: #e0f7fc; padding: 12px 24px; border-radius: 25px; font-size: 13px; z-index: 998; text-align: center; display: none; width: 80%; pointer-events: auto; cursor: pointer; }
     </style>
   </head>
   <body>
@@ -92,15 +111,12 @@
 
     <!-- スタート画面 -->
     <div id="start-screen">
-      <h2 style="margin-bottom: 10px;">四十八漁業</h2>
+      <h2 style="margin-bottom: 10px;">四十八漁場</h2>
       <p style="font-size: 14px; color: #aaa; margin-bottom: 30px;">
         ※泳いでいる魚をタップしてみてね！
       </p>
       <button id="start-btn">スタート</button>
     </div>
-
-    <!-- 案内表示 -->
-    <div id="instructions"></div>
 
     <!-- 1. 魚の詳細情報カード -->
     <div id="fish-info-card" class="popup-card">
@@ -195,20 +211,20 @@
 
       <!-- 料理切り替えタブ -->
       <div class="dish-tab-menu">
-        <button class="dish-tab-btn active" onclick="selectDish(0)">✨ 姿造り</button>
+        <button class="dish-tab-btn active" onclick="selectDish(0)">✨ 刺盛</button>
         <button class="dish-tab-btn" onclick="selectDish(1)">🔥 カマ塩焼き</button>
         <button class="dish-tab-btn" onclick="selectDish(2)">🍲 兜煮</button>
       </div>
 
       <!-- 料理詳細エリア -->
       <div id="dish-display">
-        <img id="dish-img" src="tai.png" class="fish-img" style="height: 130px;">
+        <img id="dish-img" src="sashimi.png" class="fish-img" style="height: 130px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
-          <strong id="dish-title" style="font-size: 15px; color: #002b49;">日向産 活〆真鯛の姿造り</strong>
+          <strong id="dish-title" style="font-size: 15px; color: #002b49;">日向産 活〆真鯛の刺身盛り</strong>
           <span id="dish-price" style="font-size: 16px; font-weight: bold; color: #e53e3e;">￥1,480<span style="font-size: 10px; color: #718096; font-weight: normal;">(税込)</span></span>
         </div>
         <p id="dish-desc" style="font-size: 11px; color: #4a5568; line-height: 1.4; margin: 0 0 8px 0;">
-          神経締めならではのコリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！
+          船上神経締めならではのコリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！
         </p>
         
         <div style="background: #f7fafc; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 10.5px; color: #2d3748; margin-bottom: 8px;">
@@ -221,11 +237,23 @@
       <button class="close-btn" id="back-to-fish-btn">魚の画面に戻る</button>
     </div>
 
-    <!-- 3. 注文完了通知ポップアップ -->
+    <!-- 3. 岡持（実物）案内ポップアップ -->
+    <div id="okamochi-card" class="popup-card" style="text-align: center;">
+      <div style="font-size: 16px; font-weight: bold; color: #002b49; margin-bottom: 10px;">
+        🐟 実物をお持ちいたします！
+      </div>
+      <img src="okamochi.png" alt="岡持" class="fish-img" style="height: 150px; object-fit: contain; background: #f7fafc;">
+      <p style="font-size: 11.5px; color: #4a5568; line-height: 1.5; margin: 8px 0 12px 0;">
+        ただいま、スタッフが岡持（おかもち）に入れた本日の真鯛をお席までお持ちいたします！
+      </p>
+      <button class="action-btn" id="close-okamochi-btn" style="width: 100%;">魚の詳細に戻る</button>
+    </div>
+
+    <!-- 4. 注文完了通知ポップアップ -->
     <div id="order-confirm-modal">
       <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
       <div style="font-size: 16px; font-weight: bold; color: #002b49; margin-bottom: 6px;">ご注文を承りました！</div>
-      <div id="ordered-item-name" style="font-size: 13px; font-weight: bold; color: #e53e3e; margin-bottom: 10px;">日向産 活〆真鯛の姿造り</div>
+      <div id="ordered-item-name" style="font-size: 13px; font-weight: bold; color: #e53e3e; margin-bottom: 10px;">日向産 活〆真鯛の刺身盛り</div>
       <p style="font-size: 11px; color: #718096; line-height: 1.5; margin-bottom: 15px;">
         スタッフがお席まで確認にお伺いいたします。<br>出来上がりまで楽しみにお待ちください！
       </p>
@@ -236,7 +264,7 @@
     <div id="ar-scene-container">
       <a-scene 
         id="sceneEl" embedded 
-        renderer="alpha: true; colorManagement: true; precision: high; antialias: true;"
+        renderer="alpha: true; colorManagement: true; precision: highp; antialias: true; logarithmicDepthBuffer: true;"
         vr-mode-ui="enabled: false"
         cursor="rayOrigin: mouse; fuse: false;"
         raycaster="objects: .clickable">
@@ -253,12 +281,14 @@
           id="my-fish" 
           class="clickable"
           tap-action="action: show-card"
+          fix-fish-material
           gltf-model="#fish-model" 
           scale="0.12 0.12 0.12" 
           position="0 0 -2"
           animation-mixer
           visible="true">
-          <a-sphere class="clickable" radius="15" material="color: white; transparent: true; opacity: 0.01; depthWrite: false;"></a-sphere>
+          <!-- タップ判定領域 -->
+          <a-sphere class="clickable" radius="15" material="visible: false"></a-sphere>
         </a-entity>
 
         <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
@@ -274,38 +304,46 @@
       
       const fishInfoCard = document.getElementById('fish-info-card');
       const dishCard = document.getElementById('dish-card');
+      const okamochiCard = document.getElementById('okamochi-card');
       const orderConfirmModal = document.getElementById('order-confirm-modal');
-      const instructions = document.getElementById('instructions');
 
       const dishesBtn = document.getElementById('dishes-btn');
       const seeActualBtn = document.getElementById('see-actual-btn');
       const closeInfoBtn = document.getElementById('close-info-btn');
       const backToFishBtn = document.getElementById('back-to-fish-btn');
+      const closeOkamochiBtn = document.getElementById('close-okamochi-btn');
       const orderSubmitBtn = document.getElementById('order-submit-btn');
       const closeOrderModalBtn = document.getElementById('close-order-modal-btn');
+
+      // 画面の解像度（高画素密度）対応
+      document.querySelector('a-scene').addEventListener('loaded', function () {
+        if (this.renderer) {
+          this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        }
+      });
 
       // 料理データ
       const dishesData = [
         {
-          title: "日向産 活〆真鯛の姿造り",
+          title: "日向産 活〆真鯛の刺身盛り",
           price: "￥1,480",
           desc: "船上神経締めならではのコリコリとした驚きの歯ごたえと、噛むほどに溢れる澄んだ甘み！",
           sake: "日向の地酒 純米吟醸（淡麗辛口）",
-          img: "tai.png"
+          img: "sashimi.png"
         },
         {
           title: "日向産 活〆真鯛のカマ塩焼き",
           price: "￥880",
           desc: "一匹から2つしか取れない希少部位。パリッとした皮目とジューシーな脂の乗った身が絶品！",
           sake: "特別純米酒（コクのある芳醇旨口）",
-          img: "tai.png"
+          img: "kamashio.png"
         },
         {
           title: "日向産 活〆真鯛の兜煮（あら煮）",
           price: "￥980",
           desc: "鯛の旨味が凝縮された頭部を、特製の甘辛タレでじっくり炊き上げました。お酒が進む味わい。",
           sake: "本醸造 熱燗（まろやかな味わい）",
-          img: "tai.png"
+          img: "kabutoni.png"
         }
       ];
 
@@ -362,6 +400,7 @@
       function openFishCard() {
         updateClock();
         dishCard.style.display = 'none';
+        okamochiCard.style.display = 'none';
         fishInfoCard.style.display = 'block';
       }
 
@@ -379,6 +418,17 @@
         fishInfoCard.style.display = 'block';
       });
 
+      // 「実際に見る」ボタンを押した時
+      seeActualBtn.addEventListener('click', () => {
+        fishInfoCard.style.display = 'none';
+        okamochiCard.style.display = 'block';
+      });
+
+      closeOkamochiBtn.addEventListener('click', () => {
+        okamochiCard.style.display = 'none';
+        openFishCard();
+      });
+
       // 注文ボタンを押した時
       orderSubmitBtn.addEventListener('click', () => {
         const currentDish = dishesData[selectedDishIndex];
@@ -389,16 +439,6 @@
 
       closeOrderModalBtn.addEventListener('click', () => {
         orderConfirmModal.style.display = 'none';
-      });
-
-      seeActualBtn.addEventListener('click', () => {
-        fishInfoCard.style.display = 'none';
-        instructions.innerText = "ただいま、おかもちをお持ちいたします。\n（タップで消去）";
-        instructions.style.display = 'block';
-      });
-
-      instructions.addEventListener('click', () => {
-        instructions.style.display = 'none';
       });
 
       // 自然な泳ぎの制御
