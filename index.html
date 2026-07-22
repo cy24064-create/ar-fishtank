@@ -37,15 +37,15 @@
       .tab-btn { flex: 1; padding: 8px 2px; background: none; border: none; font-size: 11px; font-weight: bold; color: #a0aec0; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; text-align: center; }
       .tab-btn.active { color: #0088ff; border-bottom-color: #0088ff; }
 
-      .tab-content { display: none; max-height: 330px; overflow-y: auto; padding-right: 4px; }
+      .tab-content { display: none; max-height: 340px; overflow-y: auto; padding-right: 4px; }
       .tab-content.active { display: block; }
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
       
-      /* 1枚インパクトカードのデザイン（図解が見やすいスタイル） */
+      /* インパクト画像スタイル */
       .single-story-card {
         position: relative;
-        height: 170px;
+        height: 150px;
         border-radius: 12px;
         overflow: hidden;
         margin-bottom: 10px;
@@ -58,7 +58,7 @@
       .single-story-card img {
         width: 100%;
         height: 100%;
-        object-fit: contain; /* 図解の全容が切れないように自動収める */
+        object-fit: contain;
         display: block;
       }
       .single-story-card .step-badge {
@@ -161,21 +161,41 @@
         </div>
       </div>
 
-      <!-- タブ3: 鮮度の秘密（1枚完結・スクロール不要） -->
+      <!-- タブ3: 鮮度の秘密（技術 × 六次産業化） -->
       <div id="tab-story" class="tab-content">
         
+        <!-- 1. 職人の技術（神経締め） -->
         <div class="single-story-card">
           <img src="shinkei.png" alt="神経締めの図解">
-          <span class="step-badge">究極の鮮度保持</span>
+          <span class="step-badge">1. 職人技「船上神経締め」</span>
         </div>
 
-        <div style="background: #f0f7ff; padding: 12px; border-radius: 10px; border-left: 4px solid #0088ff;">
-          <div style="font-size: 13px; font-weight: bold; color: #002b49; margin-bottom: 6px;">
-            ⚡ 死後硬直を「24時間」遅らせる技
+        <div style="background: #f0f7ff; padding: 10px; border-radius: 8px; border-left: 4px solid #0088ff; margin-bottom: 10px;">
+          <div style="font-size: 12px; font-weight: bold; color: #002b49; margin-bottom: 3px;">
+            ⚡ 死後硬直を「24時間」遅らせる
           </div>
-          <div style="font-size: 11px; color: #4a5568; line-height: 1.5;">
-            漁師が船の上で1匹ずつ丁寧に「神経締め」を実施。<br>
-            中間市場を通さない産直便だからこそ、獲れたてそのままのコリコリとした歯ごたえと圧倒的な旨味をお届けできます！
+          <div style="font-size: 10.5px; color: #4a5568; line-height: 1.4;">
+            船上で1匹ずつ手作業で神経締めを行い、魚のストレスをゼロに。獲れたて特有の歯ごたえと旨味を極限キープ！
+          </div>
+        </div>
+
+        <!-- 2. 流通の構造（六次産業化） -->
+        <div style="background: #fffaf0; padding: 10px; border-radius: 8px; border-left: 4px solid #dd6b20;">
+          <div style="font-size: 12px; font-weight: bold; color: #7b341e; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span>🚚 2. 六次産業化（産直・市場スキップ）</span>
+            <span style="font-size: 8.5px; background: #ed8936; color: white; padding: 2px 6px; border-radius: 8px; font-weight: bold;">生産×加工×店舗</span>
+          </div>
+          <div style="font-size: 10.5px; color: #4a5568; line-height: 1.4; margin-bottom: 6px;">
+            一般的な「市場・競り」を一切通さず、漁場からお店へ超速でダイレクト輸送。中間マージンをカットし、最高の状態をお手頃価格で提供します。
+          </div>
+
+          <!-- わかりやすい流通フロー図 -->
+          <div style="display: flex; align-items: center; justify-content: space-around; background: rgba(237, 137, 54, 0.12); padding: 6px 4px; border-radius: 6px; font-size: 9.5px; color: #7b341e; font-weight: bold; text-align: center;">
+            <span>⚓ 漁場・船元</span>
+            <span style="color: #ed8936;">➔</span>
+            <span style="color: #a0aec0; text-decoration: line-through; font-weight: normal; font-size: 8.5px;">卸売市場</span>
+            <span style="color: #ed8936;">➔</span>
+            <span>🍽️ 当店直通</span>
           </div>
         </div>
 
