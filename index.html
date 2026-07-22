@@ -41,6 +41,12 @@
       .tab-content.active { display: block; }
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
+      
+      /* 生産者プロフィールのレイアウト */
+      .producer-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; background: #f7fafc; padding: 8px 12px; border-radius: 12px; border: 1px solid #e2e8f0; }
+      .producer-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #0088ff; background-color: #edf2f7; flex-shrink: 0; }
+      .producer-info { font-size: 12px; color: #2d3748; }
+
       .info-header { font-size: 18px; font-weight: bold; color: #002b49; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
       .info-row { margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #4a5568; }
       .info-label { font-weight: bold; color: #0088ff; display: block; font-size: 11px; margin-bottom: 2px; }
@@ -52,7 +58,7 @@
       .timeline { background: #faf5ff; border: 1px solid #e9d8fd; padding: 10px; border-radius: 8px; margin-bottom: 12px; }
       .timeline-title { font-size: 11px; font-weight: bold; color: #6b46c1; margin-bottom: 6px; }
       .timeline-item { font-size: 11px; color: #4a5568; display: flex; align-items: center; margin-bottom: 4px; }
-      .timeline-time { font-weight: bold; color: #805ad5; width: 65px; display: inline-block; }
+      .timeline-time { font-weight: bold; color: #805ad5; width: 80px; display: inline-block; font-family: monospace; }
 
       /* 神経締めステップ図解デザイン */
       .shinkei-diagram { display: flex; justify-content: space-between; background: #edf2f7; padding: 8px; border-radius: 8px; margin: 8px 0; text-align: center; }
@@ -95,7 +101,6 @@
 
       <!-- タブ1: 基本情報 -->
       <div id="tab-basic" class="tab-content active">
-        <!-- アップロードしていただいた tai.png を読み込みます -->
         <img src="tai.png" alt="真鯛" class="fish-img">
         <div class="info-header">
           <span>🐟 豊浜産 活〆真鯛</span>
@@ -107,19 +112,26 @@
 
       <!-- タブ2: 生産者について -->
       <div id="tab-producer" class="tab-content">
-        <div class="info-row"><span class="info-label">👨‍🌾 生産者・漁船</span>第十八 豊漁丸（漁師・鈴木 健太郎さん）</div>
+        <!-- ryoushi.png を読み込みます -->
+        <div class="producer-profile">
+          <img src="ryoushi.png" alt="生産者・鈴木さん" class="producer-img">
+          <div class="producer-info">
+            <span class="info-label">👨‍🌾 漁師・船元</span>
+            <strong style="font-size: 13px; color: #002b49;">第十八 豊漁丸<br>鈴木 健太郎 さん</strong>
+          </div>
+        </div>
 
         <div class="quote-box">
-          💬 <strong>漁師・鈴木さんの一言</strong><br>
+          💬 <strong>鈴木さんの一言</strong><br>
           「今朝6時、最高の鯛が揚がったよ！船の上ですぐに完璧な仕込みをして送ったから、とびきりの鮮度をしっかり味わってね！」
         </div>
 
-        <!-- リアルタイム・タイムライン -->
+        <!-- リアルタイム・タイムライン（毎秒時計更新） -->
         <div class="timeline">
           <div class="timeline-title">⏱️ 産地直送ライブ・タイムライン</div>
-          <div class="timeline-item"><span class="timeline-time">【06:00】</span> 豊浜沖にて水揚げ・船上神経締め</div>
-          <div class="timeline-item"><span class="timeline-time">【08:00】</span> 漁港からお店へダイレクト発送</div>
-          <div class="timeline-item"><span class="timeline-time" id="current-time-label">【--:--】</span> お客様のテーブルへ到着！✨</div>
+          <div class="timeline-item"><span class="timeline-time">【06:00:00】</span> 豊浜沖にて水揚げ・船上神経締め</div>
+          <div class="timeline-item"><span class="timeline-time">【08:00:00】</span> 漁港からお店へダイレクト発送</div>
+          <div class="timeline-item"><span class="timeline-time" id="current-time-label">【00:00:00】</span> お客様のテーブルへ到着！✨</div>
         </div>
       </div>
 
@@ -225,16 +237,29 @@
       btnTabProducer.addEventListener('click', () => switchTab(btnTabProducer, tabProducer));
       btnTabStory.addEventListener('click', () => switchTab(btnTabStory, tabStory));
 
-      // カードを開いたときに日本時間（JST）の現在時刻を取得して反映
-      function openFishCard() {
+      // リアルタイムで秒単位まで時計を毎秒更新するタイマー機能
+      function updateClock() {
         const now = new Date();
         const jstTimeString = now.toLocaleTimeString('ja-JP', {
           timeZone: 'Asia/Tokyo',
           hour: '2-digit',
           minute: '2-digit',
+          second: '2-digit',
           hour12: false
         });
-        document.getElementById('current-time-label').innerText = `【${jstTimeString}】`;
+        const clockEl = document.getElementById('current-time-label');
+        if (clockEl) {
+          clockEl.innerText = `【${jstTimeString}】`;
+        }
+      }
+      
+      // 1秒(1000ms)ごとに現在時刻を自動更新
+      setInterval(updateClock, 1000);
+      updateClock(); // 初期化実行
+
+      // カードを開く
+      function openFishCard() {
+        updateClock();
         infoCard.style.display = 'block';
       }
 
