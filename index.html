@@ -7,7 +7,7 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     
-    <!-- ARタップ検知 & 透過補正システム -->
+    <!-- ARタップ検知 & テクスチャ/透過補正システム -->
     <script>
       AFRAME.registerComponent('tap-action', {
         schema: { speciesIndex: { type: 'int', default: 0 } },
@@ -20,12 +20,28 @@
       });
 
       AFRAME.registerComponent('fix-fish-material', {
+        schema: { textureSrc: { type: 'string', default: '' } },
         init: function () {
           this.el.addEventListener('model-loaded', () => {
             const mesh = this.el.getObject3D('mesh');
             if (mesh) {
+              let loadedTexture = null;
+              if (this.data.textureSrc) {
+                loadedTexture = new THREE.TextureLoader().load(this.data.textureSrc);
+                loadedTexture.flipY = false;
+                if (THREE.sRGBEncoding) loadedTexture.encoding = THREE.sRGBEncoding;
+              }
+
               mesh.traverse((node) => {
                 if (node.isMesh && node.material) {
+                  // テクスチャが未設定の場合、作成された画像(huetai.png等)を割り当て
+                  if (loadedTexture && (!node.material.map || !node.material.map.image)) {
+                    node.material.map = loadedTexture;
+                  }
+                  // 下地色を白にして元の画像・テクスチャの色（赤）を忠実に発色
+                  if (node.material.color) {
+                    node.material.color.setHex(0xffffff);
+                  }
                   node.material.transparent = false;
                   node.material.opacity = 1.0;
                   node.material.depthWrite = true;
@@ -268,7 +284,7 @@
       <div style="font-size: 15px; font-weight: bold; color: #002b49; margin-bottom: 4px;">ご注文を承りました！</div>
       <div id="ordered-item-name" style="font-size: 12.5px; font-weight: bold; color: #e53e3e; margin-bottom: 8px;">料理名</div>
       <p style="font-size: 10.5px; color: #718096; line-height: 1.4; margin-bottom: 12px;">
-        スタッフがお席まで確認にお伺いいたします。<br>出来上がりまで楽しみにお待ください！
+        スタッフがお席まで確認にお伺いいたします。<br>出来上がりまで楽しみにお待ちください！
       </p>
       <button class="action-btn" id="close-order-modal-btn" style="width: 100%;">閉じる</button>
     </div>
@@ -354,8 +370,8 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
           img: 'huetai.png',
-          baseScale: 0.8,                // フエダイのスケール（大きめに調整）
-          hitBox: { w: 10, h: 6, d: 4 }, // フエダイ用タップ判定ボックスサイズ
+          baseScale: 0.11,               // 真鯛(tai)と同一スケール(0.11)に調整
+          hitBox: { w: 14, h: 8, d: 6 }, // 真鯛と同一のタップ判定サイズ
           producer: {
             name: '吹上浜 恵丸\n川口 毅 さん',
             img: 'ryoushi.png',
@@ -385,7 +401,7 @@
         
         fishEntity.setAttribute('class', 'clickable');
         fishEntity.setAttribute('tap-action', `speciesIndex: ${speciesIndex}`);
-        fishEntity.setAttribute('fix-fish-material', '');
+        fishEntity.setAttribute('fix-fish-material', `textureSrc: ${species.img}`);
         fishEntity.setAttribute('gltf-model', species.modelId);
         fishEntity.setAttribute('animation-mixer', '');
 
