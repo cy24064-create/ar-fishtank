@@ -95,7 +95,17 @@
       .tab-content.active { display: block; }
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
-      .okamochi-img { width: 100%; height: auto; max-height: 280px; object-fit: contain; border-radius: 10px; margin-bottom: 10px; background-color: #f7fafc; }
+      
+      /* okamochi-img のスタイルを修正 */
+      .okamochi-img { 
+        width: 100%; 
+        height: auto; 
+        max-height: 450px; /* 修正前 280px -> 450px に拡大 */
+        object-fit: contain; 
+        border-radius: 10px; 
+        margin-bottom: 6px; /* 修正前 10px -> 6px に縮小 */
+        background-color: #f7fafc; 
+      }
 
       .single-story-card { position: relative; height: 130px; border-radius: 12px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #0f172a; display: flex; align-items: center; justify-content: center; }
       .single-story-card img { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -135,7 +145,8 @@
         .landscape-split .landscape-media { width: 42%; flex-shrink: 0; }
         .landscape-split .landscape-media img { height: 120px; margin-bottom: 0; }
         .landscape-split .landscape-body { flex: 1; }
-        .okamochi-img { max-height: 180px; margin-bottom: 0; }
+        /* 横画面時のおかもち画像の最大高さを修正 */
+        .okamochi-img { max-height: 220px; /* 修正前 180px -> 220px に拡大 */ margin-bottom: 0; }
       }
     </style>
   </head>
@@ -213,7 +224,7 @@
             ⚡ 死後硬直を「24時間」遅らせる
           </div>
           <div style="font-size: 9.5px; color: #4a5568; line-height: 1.4;">
-            船上で1匹ずつ手作業で仕込みを行い、魚のストレスをゼロに。獲れたて特有の歯ごたえと旨味を極限キープ！
+            船上で1匹ずつ手作業で仕込みを行い、魚のストレスをゼロに.獲れたて特有の歯ごたえと旨味を極限キープ！
           </div>
         </div>
 
@@ -286,7 +297,7 @@
 
     <!-- 3. 岡持案内ポップアップ -->
     <div id="okamochi-card" class="popup-card">
-      <div style="font-size: 15px; font-weight: bold; color: #002b49; margin-bottom: 8px; text-align: center;">
+      <div style="font-size: 15px; font-weight: bold; color: #002b49; margin-bottom: 4px; text-align: center;">
         🐟 実物をお持ちいたします！
       </div>
 
@@ -295,7 +306,7 @@
           <img src="okamochi.png" alt="岡持" class="okamochi-img">
         </div>
         <div class="landscape-body" style="text-align: center;">
-          <p style="font-size: 11px; color: #4a5568; line-height: 1.5; margin: 4px 0 10px 0;">
+          <p style="font-size: 11px; color: #4a5568; line-height: 1.5; margin: 2px 0 6px 0;">
             ただいま、スタッフが岡持（おかもち）に入れた本日の鮮魚をお席までお持ちいたします！
           </p>
           <button class="action-btn" id="close-okamochi-btn" style="width: 100%;">魚の詳細に戻る</button>
