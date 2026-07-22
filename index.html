@@ -34,11 +34,9 @@
 
               mesh.traverse((node) => {
                 if (node.isMesh && node.material) {
-                  // テクスチャが未設定の場合、作成された画像(huetai.png等)を割り当て
                   if (loadedTexture && (!node.material.map || !node.material.map.image)) {
                     node.material.map = loadedTexture;
                   }
-                  // 下地色を白にして元の画像・テクスチャの色（赤）を忠実に発色
                   if (node.material.color) {
                     node.material.color.setHex(0xffffff);
                   }
@@ -370,8 +368,8 @@
           status: '本日水揚げ・船上活〆（超鮮度）',
           desc: '白身魚の最高峰！甘みのある上品な脂と極上の歯ごたえが味わえる逸品。',
           img: 'huetai.png',
-          baseScale: 0.11,               // 真鯛(tai)と同一スケール(0.11)に調整
-          hitBox: { w: 14, h: 8, d: 6 }, // 真鯛と同一のタップ判定サイズ
+          baseScale: 1.8,                // モデルの元サイズに合わせ、見た目が真鯛(0.11)と同等になるよう拡大調整
+          hitBox: { w: 10, h: 6, d: 4 }, // タップ判定サイズ
           producer: {
             name: '吹上浜 恵丸\n川口 毅 さん',
             img: 'ryoushi.png',
