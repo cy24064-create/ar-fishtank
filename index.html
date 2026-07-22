@@ -37,11 +37,44 @@
       .tab-btn { flex: 1; padding: 8px 2px; background: none; border: none; font-size: 11px; font-weight: bold; color: #a0aec0; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; text-align: center; }
       .tab-btn.active { color: #0088ff; border-bottom-color: #0088ff; }
 
-      .tab-content { display: none; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+      .tab-content { display: none; max-height: 330px; overflow-y: auto; padding-right: 4px; }
       .tab-content.active { display: block; }
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
       
+      /* 1枚インパクトカードのデザイン（図解が見やすいスタイル） */
+      .single-story-card {
+        position: relative;
+        height: 170px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        background-color: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .single-story-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* 図解の全容が切れないように自動収める */
+        display: block;
+      }
+      .single-story-card .step-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: #e53e3e;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 3px 8px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        z-index: 2;
+      }
+
       /* 生産者プロフィールのレイアウト */
       .producer-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; background: #f7fafc; padding: 8px 12px; border-radius: 12px; border: 1px solid #e2e8f0; }
       .producer-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #0088ff; background-color: #edf2f7; flex-shrink: 0; }
@@ -59,11 +92,6 @@
       .timeline-title { font-size: 11px; font-weight: bold; color: #6b46c1; margin-bottom: 6px; }
       .timeline-item { font-size: 11px; color: #4a5568; display: flex; align-items: center; margin-bottom: 4px; }
       .timeline-time { font-weight: bold; color: #805ad5; width: 80px; display: inline-block; font-family: monospace; }
-
-      /* 神経締めステップ図解デザイン */
-      .shinkei-diagram { display: flex; justify-content: space-between; background: #edf2f7; padding: 8px; border-radius: 8px; margin: 8px 0; text-align: center; }
-      .shinkei-step { flex: 1; font-size: 10px; font-weight: bold; color: #2d3748; }
-      .shinkei-step span { display: block; font-size: 14px; margin-bottom: 2px; }
 
       /* 下部ボタン */
       .action-button-container { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
@@ -95,24 +123,23 @@
       <!-- 3つのタブボタン -->
       <div class="tab-menu">
         <button class="tab-btn active" id="btn-tab-basic">📌 基本情報</button>
-        <button class="tab-btn" id="btn-tab-producer">👨‍🌾 生産者について</button>
-        <button class="tab-btn" id="btn-tab-story">💡 おいしさの秘密</button>
+        <button class="tab-btn" id="btn-tab-producer">👨‍🌾 生産者</button>
+        <button class="tab-btn" id="btn-tab-story">✨ 鮮度の秘密</button>
       </div>
 
       <!-- タブ1: 基本情報 -->
       <div id="tab-basic" class="tab-content active">
         <img src="tai.png" alt="真鯛" class="fish-img">
         <div class="info-header">
-          <span>🐟 豊浜産 活〆真鯛</span>
+          <span>🐟 日向産 活〆真鯛</span>
         </div>
-        <div class="info-row"><span class="info-label">📍 漁獲地</span>愛知県 南知多 豊浜漁港</div>
+        <div class="info-row"><span class="info-label">📍 漁獲地</span>福井県 美浜町 日向漁港</div>
         <div class="info-row"><span class="info-label">🌊 状態</span>本日水揚げ・船上活〆（超鮮度）</div>
         <div class="info-row"><span class="info-label">🍽️ 味わいの特徴</span>激しい潮流で育った身の引き締まりと、噛むほどに広がる澄んだ旨み</div>
       </div>
 
       <!-- タブ2: 生産者について -->
       <div id="tab-producer" class="tab-content">
-        <!-- ryoushi.png を読み込みます -->
         <div class="producer-profile">
           <img src="ryoushi.png" alt="生産者・鈴木さん" class="producer-img">
           <div class="producer-info">
@@ -123,39 +150,35 @@
 
         <div class="quote-box">
           💬 <strong>鈴木さんの一言</strong><br>
-          「今朝6時、最高の鯛が揚がったよ！船の上ですぐに完璧な仕込みをして送ったから、とびきりの鮮度をしっかり味わってね！」
+          「今朝3時、最高の鯛が揚がったよ！船の上ですぐに完璧な仕込みをして送ったから、とびきりの鮮度をしっかり味わってね！」
         </div>
 
-        <!-- リアルタイム・タイムライン（毎秒時計更新） -->
         <div class="timeline">
           <div class="timeline-title">⏱️ 産地直送ライブ・タイムライン</div>
-          <div class="timeline-item"><span class="timeline-time">【06:00:00】</span> 豊浜沖にて水揚げ・船上神経締め</div>
-          <div class="timeline-item"><span class="timeline-time">【08:00:00】</span> 漁港からお店へダイレクト発送</div>
+          <div class="timeline-item"><span class="timeline-time">【03:00:00】</span> 日向沖にて水揚げ・船上神経締め</div>
+          <div class="timeline-item"><span class="timeline-time">【06:00:00】</span> 漁港からお店へダイレクト発送</div>
           <div class="timeline-item"><span class="timeline-time" id="current-time-label">【00:00:00】</span> お客様のテーブルへ到着！✨</div>
         </div>
       </div>
 
-      <!-- タブ3: おいしさの秘密 -->
+      <!-- タブ3: 鮮度の秘密（1枚完結・スクロール不要） -->
       <div id="tab-story" class="tab-content">
-        <div class="info-label" style="font-size: 13px;">⚡ ① 0.1秒の職人技「船上・神経締め」</div>
-        <p style="font-size: 12px; line-height: 1.4; color: #4a5568; margin-top: 4px;">
-          「船の上で暴れさせない。それが旨味を守る秘訣だ。」
-        </p>
-
-        <!-- 神経締めの図解ステップ -->
-        <div class="shinkei-diagram">
-          <div class="shinkei-step"><span>📍</span>1. 脳天一閃<br>(ストレス0)</div>
-          <div class="shinkei-step"><span>⚡</span>2. 神経締め<br>(旨味固定)</div>
-          <div class="shinkei-step"><span>🩸</span>3. 完全血抜き<br>(臭み除去)</div>
+        
+        <div class="single-story-card">
+          <img src="shinkei.png" alt="神経締めの図解">
+          <span class="step-badge">究極の鮮度保持</span>
         </div>
-        <p style="font-size: 11px; color: #718096; margin-bottom: 12px;">
-          ※魚にストレスを与えず死後硬直を遅らせることで、旨味成分（イノシン酸）と獲れたての歯ごたえを両立させています。
-        </p>
 
-        <div class="info-label" style="font-size: 13px; margin-top: 10px;">🚚 ② 中間ゼロ「超ダイレクト流通（六次産業）」</div>
-        <div class="info-row" style="margin-top: 4px;">
-          市場や仲卸を挟まず、**漁場からお店へダイレクト直結**。無駄な時間を一切挟まないからこそ実現できる「海で獲れた本物の鮮度」をお楽しみいただけます。
+        <div style="background: #f0f7ff; padding: 12px; border-radius: 10px; border-left: 4px solid #0088ff;">
+          <div style="font-size: 13px; font-weight: bold; color: #002b49; margin-bottom: 6px;">
+            ⚡ 死後硬直を「24時間」遅らせる技
+          </div>
+          <div style="font-size: 11px; color: #4a5568; line-height: 1.5;">
+            漁師が船の上で1匹ずつ丁寧に「神経締め」を実施。<br>
+            中間市場を通さない産直便だからこそ、獲れたてそのままのコリコリとした歯ごたえと圧倒的な旨味をお届けできます！
+          </div>
         </div>
+
       </div>
 
       <!-- 下部ボタンエリア -->
@@ -253,9 +276,8 @@
         }
       }
       
-      // 1秒(1000ms)ごとに現在時刻を自動更新
       setInterval(updateClock, 1000);
-      updateClock(); // 初期化実行
+      updateClock();
 
       // カードを開く
       function openFishCard() {
