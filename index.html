@@ -335,7 +335,7 @@
           status: '本日水揚げ・はえ縄生マグロ（未冷凍）',
           desc: '一度も凍らせない「生」ならではの、ねっとりとした濃厚な赤身ととろける極上の脂。',
           img: 'tuna.png',
-          baseScale: 0.8,            // マグロを迫力ある大きさに設定（0.15 → 0.8）
+          baseScale: 0.8,            // マグロを迫力ある大きさに設定
           hitBox: { w: 3.5, h: 2.0, d: 1.2 }, // マグロ用タップ判定ボックスサイズ
           producer: {
             name: '勝浦港 幸栄丸\n山本 勝 さん',
@@ -343,17 +343,15 @@
             quote: '一度も凍らせていない生の極上本マグロだ！赤身のコクとトロの甘みを存分に味わってくれ！'
           },
           dishes: [
-            { title: "本マグロの極上赤身・中トロ刺身盛り", price: "1,880円", desc: "生のモチモチとした食感と深みのある旨み。赤身と中トロの食べ比べ！", sake: "黒龍 純米大吟醸", img: "sashimi.png" },
-            { title: "本マグロのねぎま串焼き", price: "980円", desc: "脂の乗ったマグロと香ばしい白ネギの絶妙なハーモニー！", sake: "特別純米酒", img: "kamashio.png" },
-            { title: "本マグロのレアかつ", price: "1,280円", desc: "外はサクサク、中はしっとりレア！わさび醤油でさっぱりとお召し上がりください。", sake: "純米スパークリング", img: "kabutoni.png" }
+            { title: "勝浦産 本マグロの刺身盛り", price: "1,880円", desc: "生のモチモチとした食感と深みのある旨み。赤身と中トロの豪華食べ比べ！", sake: "黒龍 純米大吟醸", img: "sashimi.png" },
+            { title: "本マグロのカマ塩焼き", price: "1,280円", desc: "一匹からわずかしか取れない希少部位。じっくり焼き上げた脂の乗りと濃厚な旨味が絶品！", sake: "特別純米酒（芳醇旨口）", img: "kamashio.png" },
+            { title: "本マグロの兜煮", price: "1,480円", desc: "豪快な頭部を甘辛タレでじっくり炊き上げました。コラーゲンたっぷりの濃厚な味わい！", sake: "本醸造 熱燗", img: "kabutoni.png" }
           ]
         }
       ];
 
-      // 画面内に配置する魚の組み合わせ（0: 真鯛, 1: マグロ）
-      // [0, 1] で真鯛1匹・マグロ1匹（軽量で最も動作がスムーズ）
-      // 魚を増やしたい場合は [0, 0, 1, 1] などに変更可能です
-      const SPAWN_LIST = [0, 1];
+      // 画面内に配置する魚の組み合わせ（0: 真鯛 4匹, 1: マグロ 4匹）
+      const SPAWN_LIST = [0, 0, 0, 0, 1, 1, 1, 1];
 
       // -------------------------------------------------------------
       // AR生成 & アニメーション
@@ -386,10 +384,10 @@
         hitBox.setAttribute('material', 'visible: false');
         fishEntity.appendChild(hitBox);
 
-        // 初期位置の設定
-        const posX = (Math.random() - 0.5) * 2.5;
-        const posY = (Math.random() - 0.5) * 1.0;
-        const posZ = -1.8 - Math.random() * 1.5;
+        // 初期位置の設定（多重に広がりを持たせる）
+        const posX = (Math.random() - 0.5) * 3.5;
+        const posY = (Math.random() - 0.5) * 1.5;
+        const posZ = -2.0 - Math.random() * 2.0;
         fishEntity.setAttribute('position', `${posX} ${posY} ${posZ}`);
 
         container.appendChild(fishEntity);
@@ -416,11 +414,11 @@
             f.acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
 
             const dist = obj.position.length();
-            if (dist > 3.2) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
+            if (dist > 3.8) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
             else if (dist < 1.0) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
 
-            if (obj.position.y > 0.7) f.acceleration.y -= 0.0003;
-            else if (obj.position.y < -0.7) f.acceleration.y += 0.0003;
+            if (obj.position.y > 0.9) f.acceleration.y -= 0.0003;
+            else if (obj.position.y < -0.9) f.acceleration.y += 0.0003;
 
             f.velocity.add(f.acceleration);
             f.velocity.clampLength(0.003 * f.speedFactor, 0.010 * f.speedFactor);
