@@ -82,7 +82,7 @@
 
       .fish-img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; background-color: #edf2f7; }
       
-      /* 岡持画像の専用スタイル（縦持ち時：大きく表示） */
+      /* 岡持画像の専用スタイル */
       .okamochi-img { width: 100%; height: auto; max-height: 220px; object-fit: contain; border-radius: 10px; margin-bottom: 10px; background-color: #f7fafc; }
 
       /* インパクト画像スタイル */
@@ -125,45 +125,15 @@
       /* 注文完了モーダル */
       #order-confirm-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 320px; background: white; border-radius: 16px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); z-index: 10001; text-align: center; }
 
-      /* ------------------------------------------------------------- */
-      /* 🔄 スマホ横持ち（Orientation: Landscape）専用スタイル設定 */
-      /* ------------------------------------------------------------- */
+      /* 🔄 スマホ横持ち専用スタイル */
       @media (orientation: landscape) and (max-height: 550px) {
-        .popup-card {
-          max-width: 580px;
-          padding: 12px 16px;
-        }
-
-        .tab-content {
-          max-height: 52vh;
-        }
-
-        /* 料理カードと岡持カードを横2列（画像左・テキスト右）レイアウトに変更 */
-        .landscape-split {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .landscape-split .landscape-media {
-          width: 42%;
-          flex-shrink: 0;
-        }
-
-        .landscape-split .landscape-media img {
-          height: 120px;
-          margin-bottom: 0;
-        }
-
-        .landscape-split .landscape-body {
-          flex: 1;
-        }
-
-        /* 岡持表示の横持ち時グラフィック調整 */
-        .okamochi-img {
-          max-height: 130px;
-          margin-bottom: 0;
-        }
+        .popup-card { max-width: 580px; padding: 12px 16px; }
+        .tab-content { max-height: 52vh; }
+        .landscape-split { display: flex; align-items: center; gap: 14px; }
+        .landscape-split .landscape-media { width: 42%; flex-shrink: 0; }
+        .landscape-split .landscape-media img { height: 120px; margin-bottom: 0; }
+        .landscape-split .landscape-body { flex: 1; }
+        .okamochi-img { max-height: 130px; margin-bottom: 0; }
       }
     </style>
   </head>
@@ -277,14 +247,12 @@
         <span style="font-size: 10px; background: #e6fffa; color: #234e52; padding: 2px 7px; border-radius: 10px; border: 1px solid #b2f5ea;">本日のおすすめ</span>
       </div>
 
-      <!-- 料理切り替えタブ -->
       <div class="dish-tab-menu">
         <button class="dish-tab-btn active" onclick="selectDish(0)">✨ 刺盛</button>
         <button class="dish-tab-btn" onclick="selectDish(1)">🔥 カマ塩焼き</button>
         <button class="dish-tab-btn" onclick="selectDish(2)">🍲 兜煮</button>
       </div>
 
-      <!-- 料理詳細エリア（横持ち時に左右レイアウト化） -->
       <div id="dish-display" class="landscape-split">
         <div class="landscape-media">
           <img id="dish-img" src="sashimi.png" class="fish-img" style="height: 120px;">
@@ -304,7 +272,6 @@
         </div>
       </div>
 
-      <!-- 注文ボタン -->
       <button class="order-btn" id="order-submit-btn">🛒 この料理を注文する</button>
       <button class="close-btn" id="back-to-fish-btn">魚の画面に戻る</button>
     </div>
@@ -355,20 +322,8 @@
         <!-- カメラ -->
         <a-entity camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;"></a-entity>
 
-        <!-- 3Dタイ -->
-        <a-entity 
-          id="my-fish" 
-          class="clickable"
-          tap-action="action: show-card"
-          fix-fish-material
-          gltf-model="#fish-model" 
-          scale="0.12 0.12 0.12" 
-          position="0 0 -2"
-          animation-mixer
-          visible="true">
-          <!-- タップ判定領域 -->
-          <a-sphere class="clickable" radius="15" material="visible: false"></a-sphere>
-        </a-entity>
+        <!-- 複数匹の魚が生成される親コンテナ -->
+        <a-entity id="fishes-container"></a-entity>
 
         <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
         <a-entity light="type: directional; intensity: 0.8;" position="1 2 1"></a-entity>
@@ -379,7 +334,6 @@
       const startBtn = document.getElementById('start-btn');
       const startScreen = document.getElementById('start-screen');
       const webcam = document.getElementById('webcam-bg');
-      const fish = document.querySelector('#my-fish');
       
       const fishInfoCard = document.getElementById('fish-info-card');
       const dishCard = document.getElementById('dish-card');
@@ -401,7 +355,100 @@
         }
       });
 
-      // 料理データ
+      // -------------------------------------------------------------
+      // 🐟 魚の複数匹生成 & 泳ぎの管理ロジック
+      // -------------------------------------------------------------
+      const FISH_COUNT = 4; // 泳がせる魚の数（お好みに応じて変更可能です）
+      const fishes = [];
+      const dummy = new THREE.Object3D();
+
+      const container = document.getElementById('fishes-container');
+
+      for (let i = 0; i < FISH_COUNT; i++) {
+        const fishEntity = document.createElement('a-entity');
+        fishEntity.setAttribute('class', 'clickable');
+        fishEntity.setAttribute('tap-action', 'action: show-card');
+        fishEntity.setAttribute('fix-fish-material', '');
+        fishEntity.setAttribute('gltf-model', '#fish-model');
+        fishEntity.setAttribute('animation-mixer', '');
+
+        // 魚の大きさを少しだけランダム化（0.10〜0.13）
+        const scale = 0.10 + Math.random() * 0.03;
+        fishEntity.setAttribute('scale', `${scale} ${scale} ${scale}`);
+
+        // タップ判定領域を追加
+        const sphere = document.createElement('a-sphere');
+        sphere.setAttribute('class', 'clickable');
+        sphere.setAttribute('radius', '15');
+        sphere.setAttribute('material', 'visible: false');
+        fishEntity.appendChild(sphere);
+
+        // 初期位置を分散して配置
+        const posX = (Math.random() - 0.5) * 3;
+        const posY = (Math.random() - 0.5) * 1.2;
+        const posZ = -1.5 - Math.random() * 2;
+        fishEntity.setAttribute('position', `${posX} ${posY} ${posZ}`);
+
+        container.appendChild(fishEntity);
+
+        // 各魚の移動パラメータを保持
+        fishes.push({
+          entity: fishEntity,
+          velocity: new THREE.Vector3((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.005, (Math.random() - 0.5) * 0.01),
+          acceleration: new THREE.Vector3(),
+          swimTime: Math.random() * 100, // タイミングをバラバラにする
+          speedFactor: 0.8 + Math.random() * 0.5 // 泳ぐ速度の個体差
+        });
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        fishes.forEach((f) => {
+          if (f.entity && f.entity.object3D && f.entity.object3D.visible) {
+            const obj = f.entity.object3D;
+            f.swimTime += 0.05 * f.speedFactor;
+
+            // ランダムな泳ぎの慣性
+            const wanderX = (Math.random() - 0.5) * 0.0006;
+            const wanderY = (Math.random() - 0.5) * 0.0002;
+            const wanderZ = (Math.random() - 0.5) * 0.0006;
+            f.acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
+
+            // カメラからの距離制限（離れすぎたら戻る）
+            const dist = obj.position.length();
+            if (dist > 3.5) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
+            else if (dist < 1.0) f.acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
+
+            // 高低差の制限
+            if (obj.position.y > 0.8) f.acceleration.y -= 0.0003;
+            else if (obj.position.y < -0.8) f.acceleration.y += 0.0003;
+
+            f.velocity.add(f.acceleration);
+            f.velocity.clampLength(0.004 * f.speedFactor, 0.012 * f.speedFactor);
+            obj.position.add(f.velocity);
+            f.acceleration.set(0, 0, 0);
+
+            // 進行方向への旋回処理
+            let yaw = Math.atan2(f.velocity.x, f.velocity.z);
+            const speedXZ = Math.sqrt(f.velocity.x * f.velocity.x + f.velocity.z * f.velocity.z);
+            let pitch = Math.atan2(-f.velocity.y, speedXZ);
+            const maxPitch = THREE.MathUtils.degToRad(15);
+            pitch = THREE.MathUtils.clamp(pitch, -maxPitch, maxPitch);
+
+            const wiggle = Math.sin(f.swimTime) * 0.06;
+            const modelOffset = Math.PI / 2;
+
+            dummy.rotation.set(pitch, yaw + modelOffset + wiggle, 0, 'YXZ');
+            obj.quaternion.slerp(dummy.quaternion, 0.05);
+          }
+        });
+      }
+      animate();
+
+      // -------------------------------------------------------------
+      // UI / イベントハンドラ
+      // -------------------------------------------------------------
       const dishesData = [
         {
           title: "日向産 活〆真鯛の刺身盛り",
@@ -444,7 +491,7 @@
         document.getElementById('dish-img').src = data.img;
       }
 
-      // 3タブ切り替え
+      // タブ切り替え
       const btnTabBasic = document.getElementById('btn-tab-basic');
       const btnTabProducer = document.getElementById('btn-tab-producer');
       const btnTabStory = document.getElementById('btn-tab-story');
@@ -485,7 +532,6 @@
 
       closeInfoBtn.addEventListener('click', () => { fishInfoCard.style.display = 'none'; });
 
-      // 「この魚の料理」ボタンを押した時
       dishesBtn.addEventListener('click', () => {
         fishInfoCard.style.display = 'none';
         dishCard.style.display = 'block';
@@ -497,7 +543,6 @@
         fishInfoCard.style.display = 'block';
       });
 
-      // 「実際に見る」ボタンを押した時
       seeActualBtn.addEventListener('click', () => {
         fishInfoCard.style.display = 'none';
         okamochiCard.style.display = 'block';
@@ -508,7 +553,6 @@
         openFishCard();
       });
 
-      // 注文ボタンを押した時
       orderSubmitBtn.addEventListener('click', () => {
         const currentDish = dishesData[selectedDishIndex];
         document.getElementById('ordered-item-name').innerText = currentDish.title;
@@ -520,50 +564,7 @@
         orderConfirmModal.style.display = 'none';
       });
 
-      // 自然な泳ぎの制御
-      const velocity = new THREE.Vector3(0, 0, -0.01); 
-      const acceleration = new THREE.Vector3();
-      const dummy = new THREE.Object3D(); 
-      let swimTime = 0;
-
-      function animate() {
-        requestAnimationFrame(animate);
-        if (fish && fish.object3D && fish.object3D.visible) {
-          const obj = fish.object3D;
-          swimTime += 0.05;
-
-          const wanderX = (Math.random() - 0.5) * 0.0006;
-          const wanderY = (Math.random() - 0.5) * 0.0002;
-          const wanderZ = (Math.random() - 0.5) * 0.0006;
-          acceleration.add(new THREE.Vector3(wanderX, wanderY, wanderZ));
-
-          const dist = obj.position.length();
-          if (dist > 3.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(-0.0005));
-          else if (dist < 1.0) acceleration.add(obj.position.clone().normalize().multiplyScalar(0.0005));
-
-          if (obj.position.y > 0.6) acceleration.y -= 0.0003;
-          else if (obj.position.y < -0.6) acceleration.y += 0.0003;
-
-          velocity.add(acceleration);
-          velocity.clampLength(0.005, 0.012); 
-          obj.position.add(velocity);
-          acceleration.set(0, 0, 0); 
-
-          let yaw = Math.atan2(velocity.x, velocity.z);
-          const speedXZ = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
-          let pitch = Math.atan2(-velocity.y, speedXZ);
-          const maxPitch = THREE.MathUtils.degToRad(15);
-          pitch = THREE.MathUtils.clamp(pitch, -maxPitch, maxPitch);
-
-          const wiggle = Math.sin(swimTime) * 0.05;
-          const modelOffset = Math.PI / 2;
-
-          dummy.rotation.set(pitch, yaw + modelOffset + wiggle, 0, 'YXZ');
-          obj.quaternion.slerp(dummy.quaternion, 0.04);
-        }
-      }
-      animate();
-
+      // スタートボタン
       startBtn.addEventListener('click', async () => {
         if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
           try {
